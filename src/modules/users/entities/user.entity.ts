@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
-
+import '../../../consts/Roles'
+import { TRoles } from '../../../consts/Roles'
 
 @Entity('user')
 export class User {
@@ -14,6 +15,9 @@ export class User {
 
 	@Column()
 	pathToUserIcon: string
+
+	@Column({ type: 'simple-array' })
+	roles: string[] = []
 
 	@Column()
 	password: string

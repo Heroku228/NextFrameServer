@@ -9,4 +9,6 @@ export class UserResponseDto {
 	username: string
 	@Expose()
 	pathToUserIcon: string
+	@Expose()
+	roles: string[]
 }
