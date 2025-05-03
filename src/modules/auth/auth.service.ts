@@ -15,20 +15,20 @@ export class AuthService {
 		private readonly jwtService: JwtService
 	) { }
 
-	async validateUser(username: string, password: string) {
+	async validate(username: string, password: string) {
 		const user = await this.usersService.findByUsername(username)
 
 		if (user && await compare(password, user.password)) {
 			const responseUser = plainToInstance(UserResponseDto, user)
 
-			const token = this.jwtService.sign({
-				sub: user.id,
-				username: user.username,
-			})
+			const accessToken
+				= this.jwtService.sign({
+					sub: user.id,
+					username: user.username,
+				})
 
-			return { responseUser, token }
+			return { responseUser, accessToken }
 		}
-
 		return null
 	}
 
@@ -41,16 +41,18 @@ export class AuthService {
 		const hashedPassword = await hash(user.password, 10)
 		createdUser.password = hashedPassword
 
-		await this.usersService.saveUser(createdUser)
-		console.log(createdUser)
+		await this.usersService.create(createdUser)
 
 		const payload = { sub: createdUser.id, username: user.username }
-		const token = this.jwtService.sign(payload)
+
+		const token = this.jwtService.sign(payload, {
+			secret: process.env.JWT_KEY,
+			expiresIn: '1d'
+		})
 
 		return {
 			data: plainToInstance(UserResponseDto, createdUser),
-			token
+			token: token,
 		}
 	}
-
 }

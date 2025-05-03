@@ -6,17 +6,17 @@ import { extname, join } from 'path'
 
 export const writeUserIcon = async (username: string,
 	file: Express.Multer.File) => {
-	const pathToUserIcon = join(homedir(), 'next-frame', 'uploads', username)
+	const pathToUserDirectory = join(homedir(), 'next-frame', 'uploads', username)
 
-	if (!existsSync(pathToUserIcon))
-		await mkdir(pathToUserIcon), { recursive: true }
+	if (!existsSync(pathToUserDirectory
+
+	))
+		await mkdir(pathToUserDirectory), { recursive: true }
 
 	const originalname = file.originalname
 	const extension = extname(originalname)
 
-	const fullPathToUserIcon = join(
-		pathToUserIcon,
-		originalname.replace(extension, '') + randomUUID() + extension)
+	const fullPathToUserIcon = join(pathToUserDirectory, originalname.replace(extension, '') + randomUUID() + extension)
 
 	await writeFile(
 		fullPathToUserIcon,

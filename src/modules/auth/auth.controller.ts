@@ -1,13 +1,10 @@
-import { BadRequestException, Body, Controller, Get, Post, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Post, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { plainToInstance } from 'class-transformer'
 import { Response } from 'express'
 import { writeUserIcon } from 'src/common/utils/WriteUserIcon'
-import { CurrentUser } from 'src/config/decorators/current-user.decorator'
-import { JwtAuthGuard } from 'src/config/guards/JwtAuthGuard.guard'
 import { CreateUserDto } from '../users/entities/dto/create-user.dto'
 import { UserCredentials } from '../users/entities/dto/user-credentials.dto'
-import { UserResponseDto } from '../users/entities/dto/user-response.dto'
 import { User } from '../users/entities/user.entity'
 import { AuthService } from './auth.service'
 
@@ -20,14 +17,13 @@ export class AuthController {
 		@Body() credentials: UserCredentials,
 		@Res({ passthrough: true }) res: Response
 	) {
-		console.log(credentials)
-		const result = await this.authService.validateUser(credentials.username, credentials.password)
+		const result = await this.authService.validate(credentials.username, credentials.password)
 
 		if (result === null) throw new UnauthorizedException()
 
-		const { responseUser, token } = result
+		const { responseUser, accessToken } = result
 
-		res.cookie('jwt', token, {
+		res.cookie('jwt', accessToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'lax',
@@ -40,9 +36,9 @@ export class AuthController {
 	@Post('register')
 	@UseInterceptors(FileInterceptor('icon'))
 	async register(
+		@Res({ passthrough: true }) res: Response,
 		@UploadedFile() file: Express.Multer.File,
 		@Body() payload: CreateUserDto,
-		@Res({ passthrough: true }) res: Response
 	) {
 		if (!file) {
 			return new BadRequestException({
@@ -65,6 +61,7 @@ export class AuthController {
 		})
 
 		if (!data) throw new UnauthorizedException()
+
 		return {
 			createdUser: data,
 			icon: {

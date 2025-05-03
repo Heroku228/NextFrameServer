@@ -1,6 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import { Product } from 'src/modules/products/entities/product.entity'
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 import '../../../consts/Roles'
-import { TRoles } from '../../../consts/Roles'
 
 @Entity('user')
 export class User {
@@ -12,6 +12,17 @@ export class User {
 
 	@Column({ unique: true })
 	username: string
+
+	@Column({ nullable: true })
+	hashedRefreshToken: string
+
+	@Column({ default: false })
+	isBanned: boolean
+	@Column({ default: false })
+	isSeller: boolean
+
+	@OneToMany(() => Product, product => product.seller)
+	products: Product[]
 
 	@Column()
 	pathToUserIcon: string

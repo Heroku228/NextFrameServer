@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from './modules/auth/auth.module'
+import { Product } from './modules/products/entities/product.entity'
+import { ProductsModule } from './modules/products/products.module'
 import { User } from './modules/users/entities/user.entity'
 import { UsersModule } from './modules/users/users.module'
 
@@ -19,11 +21,11 @@ import { UsersModule } from './modules/users/users.module'
 				username: configService.get<string>('POSTGRESQL_USERNAME'),
 				password: configService.get<string>('POSTGRESQL_PASSWORD'),
 				database: configService.get<string>('POSTGRESQL_DATABASE'),
-				entities: [User],
+				entities: [User, Product],
 				synchronize: true
 			})
 		}),
-		UsersModule, AuthModule],
+		UsersModule, AuthModule, ProductsModule],
 	controllers: [],
 	providers: [],
 })
