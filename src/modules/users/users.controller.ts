@@ -1,8 +1,12 @@
-import { Controller, Delete, Get, NotFoundException, Patch, Query, UseGuards } from '@nestjs/common'
-import { AuthGuard } from '@nestjs/passport'
-import { plainToInstance } from 'class-transformer'
+import { Controller, Delete, Get, Param, Patch, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { Response } from 'express'
+import { rm } from 'fs/promises'
+import { homedir } from 'os'
+import { join } from 'path'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 import { Roles } from 'src/common/decorators/Roles.decorator'
+import { UserDirectory } from 'src/common/decorators/user-directory.decorator'
 import { JwtAuthGuard } from 'src/common/guards/JwtAuthGuard.guard'
 import { RolesGuard } from 'src/common/guards/RolesGuard.guard'
 import { UserResponseDto } from './entities/dto/user-response.dto'
@@ -10,39 +14,47 @@ import { User } from './entities/user.entity'
 import { UsersService } from './users.service'
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
 	constructor(private readonly usersService: UsersService) { }
 
-	@Get('all-users')
-	@UseGuards(AuthGuard('jwt'), RolesGuard)
+	@Delete('clear')
+	@UseGuards(RolesGuard)
 	@Roles('admin')
-	async showAllUsers() {
-		return await this.usersService.findAll()
+	async clear() {
+		await this.usersService.clear()
+		await rm(join(homedir(), 'next-frame', 'uploads'), { force: true, recursive: true })
+		return 'Clear'
 	}
 
 	@Get('me')
-	@UseGuards(JwtAuthGuard)
 	async getCurrentUser(@CurrentUser() user: UserResponseDto) {
 		return user
 	}
 
-	@Get()
-	async getUser(@Query('username') username?: string, @Query('email') email?: string) {
-		let user: User | null = null
+	@Get('user-icon/:filename')
+	async showUserIcon(
+		@Param('filename') filename: string,
+		@CurrentUser() user: UserResponseDto,
+		@UserDirectory() directory: string,
+		@Res() res: Response
+	) {
+		console.log('DIRECTORY: ', directory)
+		const userAvatar = join(directory, 'avatars', filename)
+		return res.sendFile(userAvatar)
+	}
 
-		if (username)
-			user = await this.usersService.findByUsername(username)
-
-		if (email)
-			user = await this.usersService.findByEmail(email)
-
-		if (!user) throw new NotFoundException('User not found')
-
-		return plainToInstance(UserResponseDto, user)
+	@Patch('change-icon')
+	@UseInterceptors(FileInterceptor('icon'))
+	async changeUserIcon(
+		@CurrentUser() user: UserResponseDto,
+		@UserDirectory() directory: string,
+		@UploadedFile() file: Express.Multer.File
+	) {
+		return await this.usersService.changeUserIcon(file, directory, user)
 	}
 
 	@Patch('become-seller')
-	@UseGuards(JwtAuthGuard)
 	async becomeSeller(
 		@CurrentUser() user: User
 	) {
@@ -53,14 +65,6 @@ export class UsersController {
 		return {
 			message: `User: ${user.username} now is a seller`
 		}
-	}
-
-	@Delete('clear')
-	@UseGuards(AuthGuard('jwt'), RolesGuard)
-	@Roles('admin')
-	async clear() {
-		await this.usersService.clear()
-		return 'Clear'
 	}
 }
 

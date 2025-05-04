@@ -71,4 +71,10 @@ export class AuthController {
 		}
 	}
 
+
+	@Post('logout')
+	async logout(@Res() res: Response) {
+		res.clearCookie('jwt')
+		return res.status(200).json('success')
+	}
 }

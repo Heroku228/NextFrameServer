@@ -36,7 +36,7 @@ export class AuthService {
 		if (!user) throw new BadRequestException('User not found')
 
 		const createdUser = plainToInstance(User, user)
-		createdUser.roles.push(ROLES.user)
+		createdUser.roles.push(ROLES.admin)
 
 		const hashedPassword = await hash(user.password, 10)
 		createdUser.password = hashedPassword

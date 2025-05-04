@@ -11,15 +11,19 @@ export const uploadFiles = async (directory: string, images: Express.Multer.File
 	if (!existsSync(directory))
 		await mkdir(directory, { recursive: true })
 
-	const saveTasks = images.map(async file => await saveFile(file, directory))
 
-	if (images.length < PARALLEL_WRITE_LIMIT)
+	if (images.length < PARALLEL_WRITE_LIMIT) {
+		const saveTasks = images.map(async file => await saveFile(file, directory))
 		return await Promise.all(saveTasks)
-
-	for (const file of images) {
-		await saveFile(file, directory)
 	}
 
+	const savedFiles: string[] = []
+	for (const file of images) {
+		const path = await saveFile(file, directory)
+		savedFiles.push(path)
+		return savedFiles
+	}
+	return savedFiles
 }
 
 const saveFile = async (file: Express.Multer.File, directory: string) => {
