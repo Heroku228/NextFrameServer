@@ -3,7 +3,7 @@ import { existsSync, } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { homedir } from 'os'
 import { extname, join } from 'path'
-import { webPathToUserIcon } from 'src/consts/DirRoutes'
+import { USERS_ROUTES } from 'src/consts/Routes'
 
 export const writeUserIcon = async (username: string,
 	file: Express.Multer.File) => {
@@ -31,5 +31,5 @@ export const writeUserIcon = async (username: string,
 		file.buffer
 	)
 
-	return webPathToUserIcon(newFilename)
+	return USERS_ROUTES.PATH_TO_USER_AVATAR
 }

@@ -13,5 +13,5 @@ export class ResponseProductDto {
 	@Expose()
 	pathToProductIcons: string[]
 	@Expose()
-	seller: User | string
+	seller: User
 }

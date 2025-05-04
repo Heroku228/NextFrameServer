@@ -12,7 +12,7 @@ export class Product {
 	@Column()
 	description: string
 
-	@Column({ type: 'simple-array' })
+	@Column({ type: 'simple-array', nullable: true })
 	pathToProductIcons: string[]
 
 	@Column({ default: false })
@@ -21,7 +21,7 @@ export class Product {
 	@Column('decimal')
 	price: number
 
-	@ManyToOne(() => User, user => user.products)
+	@ManyToOne(() => User, user => user.products, {onDelete: 'CASCADE'})
 	seller: User
 
 	@CreateDateColumn()

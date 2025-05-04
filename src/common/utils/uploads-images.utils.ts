@@ -2,28 +2,40 @@ import { randomUUID } from 'crypto'
 import { existsSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { extname, join } from 'path'
+import { PRODUCTS_ROUTES } from 'src/consts/Routes'
 
 const PARALLEL_WRITE_LIMIT = 8
 
-export const uploadFiles = async (directory: string, images: Express.Multer.File[]) => {
+export const uploadFile = async (directory: string,
+	images: Express.Multer.File) => {
+	const savedFile = await saveFile(images, directory)
+	return `${PRODUCTS_ROUTES.PUBLIC_PRODUCT_IMAGE}/${savedFile}`
+}
+
+export const uploadFiles = async (
+	directory: string,
+	images: Express.Multer.File[]
+) => {
 	if (!images || !directory) return []
 
 	if (!existsSync(directory))
 		await mkdir(directory, { recursive: true })
 
-
 	if (images.length < PARALLEL_WRITE_LIMIT) {
 		const saveTasks = images.map(async file => await saveFile(file, directory))
-		return await Promise.all(saveTasks)
+		console.log('saveTasks: ', saveTasks)
+		const tasks = await Promise.all(saveTasks)
+		return tasks.map(task => `${PRODUCTS_ROUTES.PUBLIC_PRODUCT_IMAGE}/${task}`)
 	}
 
-	const savedFiles: string[] = []
+	const savedFileOnFS: string[] = []
 	for (const file of images) {
 		const path = await saveFile(file, directory)
-		savedFiles.push(path)
-		return savedFiles
+		savedFileOnFS.push(path)
+		return savedFileOnFS
 	}
-	return savedFiles
+
+	return savedFileOnFS.map(file => `${PRODUCTS_ROUTES.PUBLIC_PRODUCT_IMAGE}/${file}`)
 }
 
 const saveFile = async (file: Express.Multer.File, directory: string) => {
@@ -31,7 +43,7 @@ const saveFile = async (file: Express.Multer.File, directory: string) => {
 	const filePath = join(directory, filename)
 
 	await writeFile(filePath, file.buffer)
-	return filePath
+	return filename
 }
 
 const normalizeFilename = (file: Express.Multer.File) => {

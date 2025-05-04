@@ -1,15 +1,22 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { Product } from './entities/product.entity'
-import { ProductsController } from './products.controller'
-import { ProductsService } from './products.service'
-import { PublicProductsController } from './public-products.controller'
 import { User } from '../users/entities/user.entity'
 import { UsersService } from '../users/users.service'
+import { DeleteProductsController } from './controllers/delete-products.controller'
+import { ProductsController } from './controllers/products.controller'
+import { PublicProductsController } from './controllers/public-products.controller'
+import { UpdateProductsDataController } from './controllers/update-products-data.controller'
+import { Product } from './entities/product.entity'
+import { ProductsService } from './products.service'
 
 @Module({
 	imports: [TypeOrmModule.forFeature([Product, User])],
-	controllers: [ProductsController, PublicProductsController],
+	controllers: [
+		ProductsController,
+		PublicProductsController,
+		UpdateProductsDataController,
+		DeleteProductsController
+	],
 	providers: [ProductsService, UsersService],
 })
 export class ProductsModule { }

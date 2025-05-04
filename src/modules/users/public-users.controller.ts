@@ -9,7 +9,7 @@ import { UsersService } from './users.service'
 export class PublicUsersController {
 	constructor(private readonly usersService: UsersService) { }
 
-	@Get()
+	@Get()   
 	async getUser(@Query('username') username?: string, @Query('email') email?: string) {
 		let user: User | null = null
 

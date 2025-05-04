@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Res, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Get, NotFoundException, Param, Post, Res, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { plainToInstance } from 'class-transformer'
@@ -8,19 +8,15 @@ import { join } from 'path'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 import { UserDirectory } from 'src/common/decorators/user-directory.decorator'
 import { SellerGuard } from 'src/common/guards/SellerGuards.guard'
-import { UserResponseDto } from '../users/entities/dto/user-response.dto'
-import { UsersService } from '../users/users.service'
-import { CreateProductDto } from './dto/create-product.dto'
-import { ResponseProductDto } from './dto/response-product.dto'
-import { ProductsService } from './products.service'
+import { UserResponseDto } from 'src/modules/users/entities/dto/user-response.dto'
+import { CreateProductDto } from '../dto/create-product.dto'
+import { ResponseProductDto } from '../dto/response-product.dto'
+import { ProductsService } from '../products.service'
 
 @UseGuards(AuthGuard('jwt'), SellerGuard)
 @Controller('products')
 export class ProductsController {
-	constructor(
-		private readonly productsService: ProductsService,
-		private readonly usersService: UsersService
-	) { }
+	constructor(private readonly productsService: ProductsService,) { }
 
 	@UseInterceptors(FilesInterceptor('images'))
 	@Post('create-product')
@@ -34,16 +30,15 @@ export class ProductsController {
 			createProductDto,
 			directory,
 			images,
-			user.id
+			user
 		)
+		console.log(product)
 
 		return plainToInstance(ResponseProductDto, product)
 	}
 
 	@Get('products-images')
-	async findAllProductsImages(
-		@CurrentUser() user: UserResponseDto
-	) {
+	async findAllProductsImages(@CurrentUser() user: UserResponseDto) {
 		return await this.productsService.findAllProductImages(user.username)
 	}
 
@@ -61,9 +56,4 @@ export class ProductsController {
 		return res.sendFile(pathToFile)
 	}
 
-	@Delete('clear')
-	async deleteAllProducts() {
-		await this.usersService.clear()
-		await this.productsService.clear()
-	}
 }

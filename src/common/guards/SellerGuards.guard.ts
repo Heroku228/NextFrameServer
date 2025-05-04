@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
+import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import { User } from 'src/modules/users/entities/user.entity'
 
 @Injectable()
@@ -8,7 +8,8 @@ export class SellerGuard implements CanActivate {
 
 		if (!user) throw new UnauthorizedException()
 
-		if (!user.isSeller) return false
-		else return true
+		if (!user.isSeller) {
+			throw new BadRequestException('You need to become a seller to use product service')
+		} else return true
 	}
 }
