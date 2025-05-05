@@ -18,5 +18,6 @@ import { ProductsService } from './products.service'
 		DeleteProductsController
 	],
 	providers: [ProductsService, UsersService],
+	exports: [ProductsService],
 })
 export class ProductsModule { }

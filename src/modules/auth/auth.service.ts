@@ -21,15 +21,21 @@ export class AuthService {
 		if (user && await compare(password, user.password)) {
 			const responseUser = plainToInstance(UserResponseDto, user)
 
-			const accessToken
-				= this.jwtService.sign({
-					sub: user.id,
-					username: user.username,
-				})
+			const accessToken = this.jwtService.sign({
+				sub: user.id,
+				username: user.username,
+			})
 
 			return { responseUser, accessToken }
 		}
 		return null
+	}
+
+	generateToken(user: User | UserResponseDto) {
+		return this.jwtService.sign(user, {
+			secret: process.env.JWT_KEY,
+			expiresIn: '1d'
+		})
 	}
 
 	async register(user: CreateUserDto) {

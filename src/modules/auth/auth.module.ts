@@ -23,6 +23,7 @@ import { JwtStrategy } from './jwt.strategy'
 	],
 	controllers: [AuthController],
 	providers: [AuthService, UsersService, JwtStrategy],
+	exports: [AuthService, JwtModule],
 })
 
 export class AuthModule implements NestModule {

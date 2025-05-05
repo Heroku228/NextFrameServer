@@ -1,7 +1,3 @@
-
-
-
-
 export class UserCredentials {
 	email: string
 	username: string

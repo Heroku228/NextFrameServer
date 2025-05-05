@@ -1,10 +1,13 @@
-import { BadRequestException, Body, Controller, Post, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Post, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { plainToInstance } from 'class-transformer'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { writeUserIcon } from 'src/common/utils/WriteUserIcon'
+import { API_STATUS, ApiResponse } from 'src/consts/ApiResponse'
+import { HTTP_STATUS_CODES } from 'src/consts/Http-status'
 import { CreateUserDto } from '../users/entities/dto/create-user.dto'
 import { UserCredentials } from '../users/entities/dto/user-credentials.dto'
+import { UserResponseDto } from '../users/entities/dto/user-response.dto'
 import { User } from '../users/entities/user.entity'
 import { AuthService } from './auth.service'
 
@@ -30,7 +33,15 @@ export class AuthController {
 			maxAge: 24 * 60 * 60 * 1000
 		})
 
-		return responseUser
+		const response: ApiResponse<UserResponseDto> = {
+			status: API_STATUS.SUCCESS,
+			statusCode: HTTP_STATUS_CODES.OK,
+			data: responseUser
+		}
+
+		res
+			.status(response.statusCode)
+			.json(response)
 	}
 
 	@Post('register')
@@ -73,8 +84,21 @@ export class AuthController {
 
 
 	@Post('logout')
-	async logout(@Res() res: Response) {
+	async logout(
+		@Res() res: Response,
+		@Req() req: Request
+	) {
+		if (!req.cookies['jwt']) res
+			.status(HTTP_STATUS_CODES.UNAUTHORIZED)
+			.json({ message: 'No active session' })
+
 		res.clearCookie('jwt')
-		return res.status(200).json('success')
+
+		res
+			.status(200)
+			.json({
+				status: HTTP_STATUS_CODES.OK,
+				message: 'Successful logout from account'
+			})
 	}
 }
