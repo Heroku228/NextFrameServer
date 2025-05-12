@@ -1,64 +1,80 @@
-// import { BadRequestException, Injectable } from '@nestjs/common'
-// import { JwtService } from '@nestjs/jwt'
-// import { compare, hash } from 'bcrypt'
-// import { plainToInstance } from 'class-transformer'
-// import { ROLES } from 'src/consts/Roles'
-// import { CreateUserDto } from '../users-microservice/entities/dto/create-user.dto'
-// import { UserResponseDto } from '../users-microservice/entities/dto/user-response.dto'
-// import { User } from '../users-microservice/entities/user.entity'
-// import { UsersService } from '../users-microservice/users.service'
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { ClientProxy } from '@nestjs/microservices'
+import { compare, hash } from 'bcrypt'
+import { plainToInstance } from 'class-transformer'
+import { ROLES } from 'consts/Roles'
+import { firstValueFrom, throwError } from 'rxjs'
+import { CreateUserDto } from '../users-microservice/entities/dto/create-user.dto'
+import { UserResponseDto } from '../users-microservice/entities/dto/user-response.dto'
+import { User } from '../users-microservice/entities/user.entity'
 
-// @Injectable()
-// export class AuthService {
-// 	constructor(
-// 		private readonly usersService: UsersService,
-// 		private readonly jwtService: JwtService
-// 	) { }
+@Injectable()
+export class AuthService {
+	constructor(
+		@Inject('USERS_SERVICE')
+		private readonly usersClient: ClientProxy,
+		private readonly jwtService: JwtService
+	) { }
 
-// 	async validate(username: string, password: string) {
-// 		const user = await this.usersService.findByUsername(username)
+	async validate(username: string, password: string) {
 
-// 		if (user && await compare(password, user.password)) {
-// 			const responseUser = plainToInstance(UserResponseDto, user)
+		const observableUser = this.usersClient.send('find-by-username', { username })
+			.pipe((
+				() =>
+					throwError(
+						() => new NotFoundException('User not found'))
+			))
 
-// 			const accessToken = this.jwtService.sign({
-// 				sub: user.id,
-// 				username: user.username,
-// 			})
+		const user: User = await firstValueFrom(observableUser)
 
-// 			return { responseUser, accessToken }
-// 		}
-// 		return null
-// 	}
+		if (user && await compare(password, user.password)) {
+			const responseUser = plainToInstance(UserResponseDto, user)
 
-// 	generateToken(user: User | UserResponseDto) {
-// 		return this.jwtService.sign(user, {
-// 			secret: process.env.JWT_KEY,
-// 			expiresIn: '1d'
-// 		})
-// 	}
+			const accessToken = this.jwtService.sign({
+				sub: user.id,
+				username: user.username,
+			})
 
-// 	async register(user: CreateUserDto) {
-// 		if (!user) throw new BadRequestException('User not found')
+			return { responseUser, accessToken }
+		}
+		return null
+	}
 
-// 		const createdUser = plainToInstance(User, user)
-// 		createdUser.roles.push(ROLES.admin)
+	generateToken(user: User | UserResponseDto) {
+		return this.jwtService.sign(user, {
+			secret: process.env.JWT_KEY,
+			expiresIn: '1d'
+		})
+	}
 
-// 		const hashedPassword = await hash(user.password, 10)
-// 		createdUser.password = hashedPassword
+	async register(createUserDto: CreateUserDto) {
+		if (!createUserDto) throw new BadRequestException('User not found')
 
-// 		await this.usersService.create(createdUser)
+		const user = plainToInstance(User, createUserDto)
+		user.roles.push(ROLES.admin)
 
-// 		const payload = { sub: createdUser.id, username: user.username }
+		const hashedPassword = await hash(createUserDto.password, 10)
+		user.password = hashedPassword
 
-// 		const token = this.jwtService.sign(payload, {
-// 			secret: process.env.JWT_KEY,
-// 			expiresIn: '1d'
-// 		})
+		const observableUser = this.usersClient.send('create-user', { createUserDto })
+			.pipe((
+				() => throwError(
+					() => new NotFoundException('User not found'))
+			))
 
-// 		return {
-// 			data: plainToInstance(UserResponseDto, createdUser),
-// 			token: token,
-// 		}
-// 	}
-// }
+		const userResponseDto: UserResponseDto = await firstValueFrom(observableUser)
+
+		const payload = { sub: user.id, username: user.username }
+
+		const token = this.jwtService.sign(payload, {
+			secret: process.env.JWT_KEY,
+			expiresIn: '1d'
+		})
+
+		return {
+			data: userResponseDto,
+			token: token,
+		}
+	}
+}

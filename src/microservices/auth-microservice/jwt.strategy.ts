@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { ClientProxy } from '@nestjs/microservices'
 import { PassportStrategy } from '@nestjs/passport'
 import { plainToInstance } from 'class-transformer'
 import { Request } from 'express'
 import { ExtractJwt, Strategy } from 'passport-jwt'
+import { firstValueFrom, throwError } from 'rxjs'
 import { UserResponseDto } from '../users-microservice/entities/dto/user-response.dto'
 import { User } from '../users-microservice/entities/user.entity'
-import { UsersService } from '../users-microservice/users.service'
-
-
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
 	constructor(
-		private readonly usersService: UsersService
+		@Inject('USERS_SERVICE')
+		private readonly usersClient: ClientProxy
 	) {
 		super({
 			jwtFromRequest: ExtractJwt.fromExtractors([
@@ -24,7 +24,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 	}
 
 	async validate(payload: User) {
-		const user = await this.usersService.findByUsername(payload.username)
+		const username = payload.username
+		const observableUser = this.usersClient.send('find-by-username', { username })
+			.pipe(
+				() => throwError(
+					() => new NotFoundException('User not found'))
+			)
+
+		const user: User = await firstValueFrom(observableUser)
+
 		return plainToInstance(UserResponseDto, user)
 	}
 }

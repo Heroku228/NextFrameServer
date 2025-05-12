@@ -1,5 +1,8 @@
 import { ClientProxyFactory, Transport } from '@nestjs/microservices'
 
+
+export const NEST_CLIENTS_MODULE = {}
+
 export const AUTH_SERVICE = {
 	provide: 'AUTH_SERVICE',
 	useFactory: () => ClientProxyFactory.create(
