@@ -23,7 +23,7 @@ export class User {
 	// @OneToMany(() => Product, product => product.seller)
 	// products: Product[]
 
-	@Column()
+	@Column({ nullable: true })
 	pathToUserIcon: string
 
 	@Column({ type: 'simple-array' })

@@ -1,22 +1,37 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { ClientProxy } from '@nestjs/microservices'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
+import { writeUserIcon } from 'common/utils/WriteUserIcon'
+import { ROLES, TRoles } from 'consts/Roles'
 import { readdir, rename } from 'fs/promises'
 import { join } from 'path'
+import { lastValueFrom } from 'rxjs'
 import { Repository } from 'typeorm'
 import { UpdateUserData } from './entities/dto/update-user.dto'
 import { UserResponseDto } from './entities/dto/user-response.dto'
 import { User } from './entities/user.entity'
-import { ROLES, TRoles } from 'consts/Roles'
-import { writeUserIcon } from 'common/utils/WriteUserIcon'
 
 @Injectable()
 export class UsersService {
 	constructor(
 		@InjectRepository(User)
-		private readonly userRepository: Repository<User>
+		private readonly userRepository: Repository<User>,
+		@Inject('PRODUCTS_SERVICE')
+		private readonly productsClient: ClientProxy,
 	) { }
+
+	async getUserWithProducts(userId: string) {
+		const products = await lastValueFrom(
+			this.productsClient.send('get-products-by-user', { userId })
+		)
+
+		return {
+			userId,
+			products
+		}
+	}
 
 	async findById(id: string) {
 		return await this.userRepository.findOne({
