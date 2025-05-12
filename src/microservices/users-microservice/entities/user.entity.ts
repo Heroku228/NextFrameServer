@@ -1,5 +1,4 @@
-import { Product } from 'src/modules/products/entities/product.entity'
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 import '../../../consts/Roles'
 
 @Entity('user')
@@ -21,8 +20,8 @@ export class User {
 	@Column({ default: false })
 	isSeller: boolean
 
-	@OneToMany(() => Product, product => product.seller)
-	products: Product[]
+	// @OneToMany(() => Product, product => product.seller)
+	// products: Product[]
 
 	@Column()
 	pathToUserIcon: string

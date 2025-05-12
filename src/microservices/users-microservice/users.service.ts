@@ -4,12 +4,12 @@ import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
 import { readdir, rename } from 'fs/promises'
 import { join } from 'path'
-import { writeUserIcon } from 'src/common/utils/WriteUserIcon'
-import { ROLES, TRoles } from 'src/consts/Roles'
 import { Repository } from 'typeorm'
 import { UpdateUserData } from './entities/dto/update-user.dto'
 import { UserResponseDto } from './entities/dto/user-response.dto'
 import { User } from './entities/user.entity'
+import { ROLES, TRoles } from 'consts/Roles'
+import { writeUserIcon } from 'common/utils/WriteUserIcon'
 
 @Injectable()
 export class UsersService {

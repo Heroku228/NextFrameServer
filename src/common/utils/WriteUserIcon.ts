@@ -1,9 +1,9 @@
+import { USERS_ROUTES } from 'consts/Routes'
 import { randomUUID } from 'crypto'
 import { existsSync, } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { homedir } from 'os'
 import { extname, join } from 'path'
-import { USERS_ROUTES } from 'src/consts/Routes'
 
 export const writeUserIcon = async (username: string,
 	file: Express.Multer.File) => {

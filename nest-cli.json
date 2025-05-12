@@ -4,5 +4,11 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true
+  },
+  "projects": {
+    "users-microservice": {
+      "type": "application",
+      "entryFile": "microservice/users-microservice/main"
+    }
   }
 }

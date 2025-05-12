@@ -1,8 +1,8 @@
+import { PRODUCTS_ROUTES } from 'consts/Routes'
 import { randomUUID } from 'crypto'
 import { existsSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { extname, join } from 'path'
-import { PRODUCTS_ROUTES } from 'src/consts/Routes'
 
 const PARALLEL_WRITE_LIMIT = 8
 

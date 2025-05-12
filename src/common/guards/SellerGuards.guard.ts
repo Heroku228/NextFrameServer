@@ -1,5 +1,5 @@
 import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
-import { User } from 'src/modules/users/entities/user.entity'
+import { User } from 'microservices/users-microservice/entities/user.entity'
 
 @Injectable()
 export class SellerGuard implements CanActivate {
