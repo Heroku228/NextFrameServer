@@ -88,8 +88,6 @@ export class UsersController {
 
 	@MessagePattern('create-user')
 	async createUser(@Payload() createUserDto: User) {
-		console.log('createUserDto -> ', createUserDto)
-
 		const userToSave = plainToInstance(User, createUserDto)
 		return await this.usersService.create(userToSave)
 	}

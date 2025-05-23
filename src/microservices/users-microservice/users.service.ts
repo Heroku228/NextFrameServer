@@ -1,5 +1,5 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { ClientProxy } from '@nestjs/microservices'
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
@@ -44,7 +44,16 @@ export class UsersService {
 	}
 
 	async create(user: User) {
-		return await this.userRepository.save(user)
+		try {
+			return await this.userRepository.save(user)
+		} catch (err) {
+			if (err.code === '23505') {
+				console.log('code: 23505 ', err)
+				const detail = err?.driverError?.detail || 'User with such email or username already exists'
+				throw new RpcException(new ConflictException(detail))
+			}
+			throw err
+		}
 	}
 
 	async findAll() {

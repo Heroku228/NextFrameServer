@@ -5,6 +5,11 @@ import { User } from 'microservices/users-microservice/entities/user.entity'
 import { Observable } from 'rxjs'
 
 
+type TypeObservableValidateData = {
+	responseUser: UserResponseDto
+	accessToken: string
+}
+
 @Injectable()
 export class AppAuthService {
 	constructor(
@@ -17,7 +22,7 @@ export class AppAuthService {
 	}
 
 
-	validate(username: string, password: string) {
+	validate(username: string, password: string): Observable<TypeObservableValidateData> {
 		console.log('validate data -> ', username, password)
 		return this.authClient.send('validate', { username, password })
 	}

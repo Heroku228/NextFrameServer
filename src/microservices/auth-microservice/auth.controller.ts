@@ -1,5 +1,5 @@
-import { Controller } from '@nestjs/common'
-import { MessagePattern, Payload } from '@nestjs/microservices'
+import { ConflictException, Controller } from '@nestjs/common'
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from '../users-microservice/entities/user.entity'
 import { AuthService } from './auth.service'
@@ -31,13 +31,18 @@ export class AuthController {
 
 	@MessagePattern('register')
 	async register(@Payload() user: User) {
-		console.log('auth microservice -> payloadData -> ', user)
-		const { data, token } = await this.authService.register(user)
-		console.log('Data from authMicroservice service -> ', data, token)
+		try {
+			const response = await this.authService.register(user)
 
-		return {
-			createdUser: data,
-			token: token
+			if (response) {
+				const { data, token } = response
+				return {
+					createdUser: data,
+					token: token
+				}
+			}
+		} catch (err) {
+			throw new RpcException(new ConflictException('Failed to create account', err))
 		}
 	}
 

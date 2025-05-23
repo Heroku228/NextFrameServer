@@ -63,16 +63,8 @@ export class AuthService {
 		const hashedPassword = await hash(createUserDto.password, 10)
 		user.password = hashedPassword
 
-		const observableUser = this.usersClient.send('create-user', user)
-			.pipe((
-				catchError(
-					() => throwError(
-						() => new NotFoundException('User not found')
-					)
-				)
-			))
-
-		const userData: UserResponseDto = await firstValueFrom(observableUser)
+		const userData: UserResponseDto = await firstValueFrom(
+			this.usersClient.send('create-user', user))
 
 		const payload = { sub: userData.id, username: userData.username }
 
@@ -85,5 +77,6 @@ export class AuthService {
 			data: userData,
 			token: token,
 		}
+
 	}
 }
