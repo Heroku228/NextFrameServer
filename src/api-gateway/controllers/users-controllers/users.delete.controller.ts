@@ -1,9 +1,9 @@
 import { Controller, Delete, ForbiddenException, Param, Res, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
+import { CookieUserGuard } from 'common/decorators/cookie-user.guard'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { Roles } from 'common/decorators/Roles.decorator'
 import { UserDirectory } from 'common/decorators/user-directory.decorator'
-import { JwtAuthGuard } from 'common/guards/JwtAuthGuard.guard'
 import { RolesGuard } from 'common/guards/RolesGuard.guard'
 import { FILE_SYSTEM_ROUTES } from 'consts/Routes'
 import { Response } from 'express'
@@ -14,7 +14,7 @@ import { homedir } from 'os'
 import { join } from 'path'
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(CookieUserGuard)
 export class DeleteUsersController {
 	constructor(private readonly usersService: AppUsersService) { }
 

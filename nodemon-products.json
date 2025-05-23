@@ -1,0 +1,6 @@
+{
+  "watch": ["src/microservices/users-microservice"],
+  "ext": "ts",
+  "ignore": ["**/*.spec.ts"],
+  "exec": "ts-node -r tsconfig-paths/register src/microservices/products-microservice/main.ts"
+}

@@ -1,36 +1,47 @@
-import { Controller, Get, NotFoundException, Query } from '@nestjs/common'
-import { AppUsersService } from 'api-gateway/services/app-users.service'
+import { Controller, Get, Inject, NotFoundException, Query, Res} from '@nestjs/common'
+import { ClientProxy } from '@nestjs/microservices'
 import { plainToInstance } from 'class-transformer'
+import { CurrentUser } from 'common/decorators/current-user.decorator'
+import { Response } from 'express'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from 'microservices/users-microservice/entities/user.entity'
-import { firstValueFrom } from 'rxjs'
+import { catchError, firstValueFrom, Observable, throwError } from 'rxjs'
 
 @Controller('public/users')
 export class PublicUsersController {
-	constructor(private readonly usersService: AppUsersService) { }
+	constructor(
+		@Inject('USERS_SERVICE')
+		private readonly usersClient: ClientProxy) { }
+
+	@Get('me')
+	getData(
+		@CurrentUser() user: User,
+		@Res() res: Response
+	) {
+		console.log('USER => ', user)
+		res.send(user)
+		return
+	}
 
 	@Get()
-	async getUser(@Query('username') username?: string, @Query('email') email?: string) {
-		let user: User | null = null
+	async getUser(@Query('username') username: string) {
 		console.log('get user controller')
 
-		if (username) {
-			const observableUser = this.usersService.findByUsername(username)
-			return await firstValueFrom(observableUser)
-		}
+		const observableUser: Observable<User> = this.usersClient.send('find-by-username', username)
+			.pipe(
+				catchError(
+					() =>
+						throwError(() =>
+							new NotFoundException('User not found'))
+				)
+			)
 
-		if (email) {
-			const observableUser = this.usersService.findByEmail(email)
-			return await firstValueFrom(observableUser)
-		}
-
-		if (!user) throw new NotFoundException('User not found')
-
+		const user = await firstValueFrom(observableUser)
 		return plainToInstance(UserResponseDto, user)
 	}
 
 	@Get('all-users')
 	async showAllUsers() {
-		return this.usersService.findAll()
+		return this.usersClient.send('find-all', {})
 	}
 }

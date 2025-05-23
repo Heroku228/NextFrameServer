@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
 import { plainToInstance } from 'class-transformer'
-import { CreateUserDto } from './entities/dto/create-user.dto'
 import { UpdateUserData } from './entities/dto/update-user.dto'
 import { UserResponseDto } from './entities/dto/user-response.dto'
 import { User } from './entities/user.entity'
@@ -9,46 +8,52 @@ import { UsersService } from './users.service'
 
 @Injectable()
 export class UsersController {
-	constructor(private readonly usersService: UsersService) { }
+	constructor(
+		private readonly usersService: UsersService,
+	) { }
 
-	@MessagePattern({ cmd: 'get-user' })
+
+	@MessagePattern('get-user')
 	async getCurrentUser(@Payload() data: { username: string }) {
 		console.log('getCurrentUser payload data -> ', data)
 		return await this.usersService.findByUsername(data.username)
 	}
 
-	// @MessagePattern({ cmd: 'find-user-products' })
-	// async findUserProducts(@Payload() data: { userId: string }) {
-	// 	return await this.usersService.findUserProducts(data.userId)
-	// }
+	@MessagePattern('find-user-products')
+	async findUserProducts(@Payload() data: { userId: string }) {
+		return await this.usersService.findUserProducts(data.userId)
+	}
 
-	@MessagePattern({ cmd: 'find-by-id' })
+	@MessagePattern('find-by-id')
 	async findById(@Payload() data: { id: string }) {
 		return await this.usersService.findById(data.id)
 	}
 
-	@MessagePattern({ cmd: 'clear-all-data' })
+	@MessagePattern('clear-all-data')
 	async clear() {
 		return await this.usersService.clear()
 	}
 
 
-	@MessagePattern({ cmd: 'find-all' })
-	async findAll(@Payload() data: { id: string }) {
+	@MessagePattern('find-all')
+	async findAll() {
 		return await this.usersService.findAll()
 	}
 
-	@MessagePattern({ cmd: 'find-by-username' })
-	async findByUsername(@Payload() data: { username: string }) {
-		return await this.usersService.findByUsername(data.username)
-	}
-	
-	@MessagePattern({ cmd: 'find-by-email' })
-	async findByEmail(@Payload() data: { email: string }) {
-		return await this.usersService.findByEmail(data.email)
+	@MessagePattern('find-by-username')
+	async findByUsername(@Payload() username: string) {
+		console.log('find by username data => ', username)
+		const user = await this.usersService.findByUsername(username)
+		console.log('find by username user => ', user)
+		return user
 	}
 
-	@MessagePattern({ cmd: 'change-user-icon' })
+	@MessagePattern('find-by-email')
+	async findByEmail(@Payload() email: string) {
+		return await this.usersService.findByEmail(email)
+	}
+
+	@MessagePattern('change-user-icon')
 	async changeUserIcon(@Payload() data: {
 		file: Express.Multer.File,
 		directory: string,
@@ -57,34 +62,31 @@ export class UsersController {
 		return await this.usersService.changeUserIcon(data.file, data.directory, data.user)
 	}
 
-	@MessagePattern({ cmd: 'set-become-seller' })
-	async setBecomeSeller(@Payload() data: { username: string }) {
-		return await this.usersService.setBecomeSeller(data.username)
+	@MessagePattern('set-become-seller')
+	async setBecomeSeller(@Payload() username: string) {
+		return await this.usersService.setBecomeSeller(username)
 	}
 
-	@MessagePattern({ cmd: 'set-user-account-by-id' })
-	async deleteUserAccountByID(@Payload() data: { userId: string }) {
-		return await this.usersService.deleteUserAccountByID(data.userId)
+	@MessagePattern('set-user-account-by-id')
+	async deleteUserAccountByID(@Payload() userId: string) {
+		return await this.usersService.deleteUserAccountByID(userId)
 	}
 
-	@MessagePattern({ cmd: 'set-other-user-account' })
-	async deleteOtherUserAccount(@Payload() data: { username: string }) {
-		return await this.usersService.deleteOtherUserAccount(data.username)
+	@MessagePattern('set-other-user-account')
+	async deleteOtherUserAccount(@Payload() username: string) {
+		return await this.usersService.deleteOtherUserAccount(username)
 	}
 
-	@MessagePattern({ cmd: 'update-user-data' })
-	async updateUserData(@Payload() data: { userData: UpdateUserData, user: UserResponseDto }) {
-		return await this.usersService.updateUserData(data.userData, data.user)
+	@MessagePattern('update-user-data')
+	async updateUserData(@Payload() userData: UpdateUserData, user: UserResponseDto) {
+		return await this.usersService.updateUserData(userData, user)
 	}
 
-	@MessagePattern({ cmd: 'create-user' })
-	async createUser(@Payload() data: { createUserDto: CreateUserDto }) {
-		console.log('createUser payload data -> ', data)
-		const { createUserDto } = data
+	@MessagePattern('create-user')
+	async createUser(@Payload() createUserDto: User) {
+		console.log('createUserDto -> ', createUserDto)
 
 		const userToSave = plainToInstance(User, createUserDto)
-		const user = await this.usersService.create(userToSave)
-
-		return plainToInstance(UserResponseDto, user)
+		return await this.usersService.create(userToSave)
 	}
 }

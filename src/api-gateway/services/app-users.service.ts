@@ -8,8 +8,9 @@ import { Observable } from 'rxjs'
 
 @Injectable()
 export class AppUsersService {
-	constructor(@Inject('USERS_SERVICE')
-	private readonly userClient: ClientProxy
+	constructor(
+		@Inject('USERS_SERVICE')
+		private readonly userClient: ClientProxy
 	) { }
 
 	findUserProducts(userId: string): Observable<Product[]> {
@@ -33,7 +34,7 @@ export class AppUsersService {
 	}
 
 	findByUsername(username: string) {
-		return this.userClient.send('find-by-username', { username })
+		return this.userClient.send('find-by-username', username)
 	}
 
 	findByEmail(email: string) {

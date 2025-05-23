@@ -1,25 +1,40 @@
-import { Controller, Get, NotFoundException, Param, Res, UseGuards } from '@nestjs/common'
+import { Controller, Get, Inject, NotFoundException, Param, Res, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { plainToInstance } from 'class-transformer'
+import { CookieUserGuard } from 'common/decorators/cookie-user.guard'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { UserDirectory } from 'common/decorators/user-directory.decorator'
-import { JwtAuthGuard } from 'common/guards/JwtAuthGuard.guard'
 import { FILE_SYSTEM_ROUTES } from 'consts/Routes'
 import { Response } from 'express'
 import { readdir } from 'fs/promises'
 import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
+import { User } from 'microservices/users-microservice/entities/user.entity'
 import { join } from 'path'
-import { catchError, firstValueFrom, throwError } from 'rxjs'
+import { catchError, firstValueFrom, Observable, throwError } from 'rxjs'
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(CookieUserGuard)
 export class AppUsersController {
-	constructor(private readonly appUsersService: AppUsersService) { }
+	constructor(
+		@Inject()
+		private readonly appUsersService: AppUsersService,
+		@Inject()
+		private readonly usersService: AppUsersService
+	) { }
 
 	@Get('me')
 	async getCurrentUser(@CurrentUser() user: UserResponseDto) {
-		return user
+		const observableCurrentUser: Observable<User> = this.usersService
+			.findByUsername(user.username)
+			.pipe(
+				catchError(() =>
+					throwError(() =>
+						new NotFoundException())
+				))
+
+		const userResponse = await firstValueFrom(observableCurrentUser)
+		return plainToInstance(UserResponseDto, userResponse)
 	}
 
 	@Get('user-products')

@@ -9,6 +9,7 @@ import { JwtStrategy } from './jwt.strategy'
 
 @Module({
 	imports: [
+		ConfigModule.forRoot({ isGlobal: true }),
 		ClientsModule,
 		JwtModule.registerAsync({
 			imports: [ConfigModule],
@@ -23,6 +24,7 @@ import { JwtStrategy } from './jwt.strategy'
 	providers: [AuthService, JwtStrategy],
 	exports: [AuthService, JwtModule],
 })
+
 export class AuthModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		consumer.apply(AuthMiddleware).forRoutes('/users', '/auth')

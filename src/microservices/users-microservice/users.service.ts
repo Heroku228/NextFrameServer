@@ -22,7 +22,7 @@ export class UsersService {
 		private readonly productsClient: ClientProxy,
 	) { }
 
-	async getUserWithProducts(userId: string) {
+	async findUserProducts(userId: string) {
 		const products = await lastValueFrom(
 			this.productsClient.send('get-products-by-user', { userId })
 		)
@@ -47,7 +47,7 @@ export class UsersService {
 		return await this.userRepository.save(user)
 	}
 
-	async findAll(): Promise<UserResponseDto[]> {
+	async findAll() {
 		return (await this.userRepository
 			.find())
 			.map(user => plainToInstance(UserResponseDto, user))

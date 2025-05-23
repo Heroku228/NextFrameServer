@@ -12,7 +12,8 @@ export const FILE_SYSTEM_ROUTES = {
 } as const
 
 export const USERS_ROUTES = {
-	PATH_TO_USER_AVATAR: 'http://localhost:3000/api/v1/users/user-icon'
+	PATH_TO_USER_AVATAR: 'http://localhost:3000/api/v1/users/user-icon',
+	ME_ROUTE: 'http://localhost:3000/api/v1/users/me'
 } as const
 
 export const AUTH_ROUTES = {
