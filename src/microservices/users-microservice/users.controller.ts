@@ -12,7 +12,6 @@ export class UsersController {
 		private readonly usersService: UsersService,
 	) { }
 
-
 	@MessagePattern('get-user')
 	async getCurrentUser(@Payload() data: { username: string }) {
 		console.log('getCurrentUser payload data -> ', data)
@@ -78,8 +77,13 @@ export class UsersController {
 	}
 
 	@MessagePattern('update-user-data')
-	async updateUserData(@Payload() userData: UpdateUserData, user: UserResponseDto) {
-		return await this.usersService.updateUserData(userData, user)
+	async updateUserData(@Payload() userData: UpdateUserData) {
+		console.log('users controller update user data => ', userData)
+		const updatedUser = await this.usersService.updateUserData(userData)
+
+		console.log('(update user data) => ', userData)
+
+		return plainToInstance(UserResponseDto, updatedUser)
 	}
 
 	@MessagePattern('create-user')

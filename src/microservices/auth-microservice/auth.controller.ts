@@ -1,11 +1,17 @@
 import { Controller } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
+import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from '../users-microservice/entities/user.entity'
 import { AuthService } from './auth.service'
 
 type TPayloadCredentials = {
 	username: string,
 	password: string
+}
+
+type TTokenPayload = {
+	id: string,
+	username: string
 }
 
 @Controller('auth')
@@ -33,5 +39,10 @@ export class AuthController {
 			createdUser: data,
 			token: token
 		}
+	}
+
+	@MessagePattern('generate-token')
+	async generateToken(@Payload() user: User | UserResponseDto) {
+		return this.authService.generateToken(user)
 	}
 }

@@ -141,27 +141,38 @@ export class UsersService {
 		this.deleteUserAccountByID(user.id)
 	}
 
-	async updateUserData(userData: UpdateUserData, user: UserResponseDto) {
-		if (!userData || !user)
+	async updateUserData(userData: UpdateUserData) {
+		if (!userData)
 			throw new BadRequestException('Invalid data')
 
-		const existingUser = await this.findByUsername(user.username)
-		if (!existingUser) {
+		console.log('users service user data => ', userData)
+		const { username, email, password, userId } = userData
+		console.log('usernmae => ', username)
+
+		const existingUser = await this.findById(userId)
+
+		console.log('EXISTINS USER => ', existingUser)
+
+		if (!existingUser)
 			throw new NotFoundException('User not found')
-		}
 
 		const updatePayload: Partial<User> = {}
 
-		if (userData.username)
-			updatePayload.username = userData.username
+		if (username)
+			updatePayload.username = username
 
-		if (userData.email)
-			updatePayload.email = userData.email
+		if (email)
+			updatePayload.email = email
 
-		if (userData.password) {
-			const hashedPassword = await hash(userData.password, 10)
+		if (password) {
+			const hashedPassword = await hash(password, 10)
 			updatePayload.password = hashedPassword
 		}
+
+		console.log('Users service update payload => ', updatePayload)
+
+
+		// TODO => change userIcon
 
 		if (Object.keys(updatePayload).length === 0)
 			throw new BadRequestException('No data provided to update')
@@ -172,6 +183,6 @@ export class UsersService {
 			where: { id: existingUser.id }
 		})
 
-		return updatedUser!
+		return updatedUser
 	}
 }

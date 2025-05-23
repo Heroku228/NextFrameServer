@@ -27,7 +27,6 @@ export class AuthService {
 			)
 
 		const user: User = await firstValueFrom(observableUser)
-		console.log('user -> ', user)
 
 		if (user && await compare(password, user.password)) {
 			const responseUser = plainToInstance(UserResponseDto, user)
@@ -43,7 +42,13 @@ export class AuthService {
 	}
 
 	generateToken(user: User | UserResponseDto) {
-		return this.jwtService.sign(user, {
+		const payload = {
+			sub: user.id,
+			username: user.username,
+			roles: user.roles
+		}
+
+		return this.jwtService.sign(payload, {
 			secret: process.env.JWT_KEY,
 			expiresIn: '1d'
 		})
@@ -71,14 +76,10 @@ export class AuthService {
 
 		const payload = { sub: userData.id, username: userData.username }
 
-		console.log('PAYLOAD -> ', payload)
-		console.log('process.env.JWT_KEY -> ', process.env.JWT_KEY)
 		const token = this.jwtService.sign(payload, {
 			secret: process.env.JWT_KEY,
 			expiresIn: '1d'
 		})
-
-		console.log('Return values: ', userData, token)
 
 		return {
 			data: userData,

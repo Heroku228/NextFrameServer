@@ -1,9 +1,9 @@
 import { Controller, Delete, ForbiddenException, Param, Res, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
-import { CookieUserGuard } from 'common/decorators/cookie-user.guard'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { Roles } from 'common/decorators/Roles.decorator'
 import { UserDirectory } from 'common/decorators/user-directory.decorator'
+import { CookieUserGuard } from 'common/guards/cookie-user.guard'
 import { RolesGuard } from 'common/guards/RolesGuard.guard'
 import { FILE_SYSTEM_ROUTES } from 'consts/Routes'
 import { Response } from 'express'
@@ -39,7 +39,7 @@ export class DeleteUsersController {
 	@Roles('admin')
 	@Delete('delete-account/:username')
 	async deleteOtherUserAccount(@Param('username') username: string) {
-		await this.usersService.deleteOtherUserAccount(username)
+		this.usersService.deleteOtherUserAccount(username)
 
 		const pathToUserDirectory = join(FILE_SYSTEM_ROUTES.PATH_TO_UPLOADS_DIR, username)
 

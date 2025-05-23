@@ -4,6 +4,7 @@ import { Product } from 'microservices/products-microservice/entities/product.en
 import { CreateUserDto } from 'microservices/users-microservice/entities/dto/create-user.dto'
 import { UpdateUserData } from 'microservices/users-microservice/entities/dto/update-user.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
+import { User } from 'microservices/users-microservice/entities/user.entity'
 import { Observable } from 'rxjs'
 
 @Injectable()
@@ -33,7 +34,7 @@ export class AppUsersService {
 		return this.userClient.send('find-all-user', {})
 	}
 
-	findByUsername(username: string) {
+	findByUsername(username: string): Observable<User | null> {
 		return this.userClient.send('find-by-username', username)
 	}
 
@@ -61,8 +62,8 @@ export class AppUsersService {
 		return this.userClient.send('delete-other-user-account', { username })
 	}
 
-	updateUserData(userData: UpdateUserData, user: UserResponseDto) {
-		return this.userClient.send('update-user-data', { userData, user })
+	updateUserData(userData: UpdateUserData): Observable<User | null> {
+		return this.userClient.send('update-user-data', userData)
 	}
 
 }

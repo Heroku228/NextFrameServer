@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtModule } from '@nestjs/jwt'
 import { ClientsModule } from 'api-gateway/clients/clients.module'
+import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { JwtStrategy } from 'microservices/auth-microservice/jwt.strategy'
 import { DeleteUsersController } from './users.delete.controller'
@@ -28,7 +29,7 @@ import { PublicUsersController } from './users.public.controller'
 		PatchUserController,
 		DeleteUsersController
 	],
-	providers: [AppUsersService, JwtStrategy]
+	providers: [AppUsersService, AppAuthService, JwtStrategy]
 })
 
 export class UsersModule { }
