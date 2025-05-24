@@ -23,6 +23,7 @@ export class AppUsersService {
 	}
 
 	clear() {
+		console.log('clear method')
 		return this.userClient.send('clear-all-data', {})
 	}
 
@@ -54,8 +55,8 @@ export class AppUsersService {
 		return this.userClient.send('set-become-seller', username)
 	}
 
-	deleteUserAccountByID(userId: string) {
-		return this.userClient.send('delete-user-account-by-id', { userId })
+	deleteUserAccountByID(userId: string): Observable<string | null> {
+		return this.userClient.send('delete-user-account-by-id', userId)
 	}
 
 	deleteOtherUserAccount(username: string) {

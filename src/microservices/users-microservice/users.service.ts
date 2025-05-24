@@ -41,7 +41,13 @@ export class UsersService {
 	}
 
 	async clear() {
-		await this.userRepository.delete({})
+		try {
+			console.log('clear service')
+			await this.userRepository.delete({})
+		} catch (err) {
+			console.log('clear service catch')
+			throw new ConflictException('No users data')
+		}
 	}
 
 	async create(user: User) {
@@ -49,7 +55,6 @@ export class UsersService {
 			return await this.userRepository.save(user)
 		} catch (err) {
 			if (err.code === '23505') {
-				console.log('code: 23505 ', err)
 				const detail = err?.driverError?.detail || 'User with such email or username already exists'
 				throw new RpcException(new ConflictException(detail))
 			}
@@ -129,8 +134,6 @@ export class UsersService {
 	async setBecomeSeller(userId: string) {
 		await this.userRepository.update(userId, { isSeller: true })
 		const user = await this.userRepository.findOne({ where: { id: userId } })
-
-		console.log('updatedUser => ', user)
 		return plainToInstance(UserResponseDto, user)
 	}
 
@@ -157,8 +160,6 @@ export class UsersService {
 	async updateUserData(userData: UpdateUserData) {
 		if (!userData)
 			throw new BadRequestException('Invalid data')
-
-		console.log('update user data => ', userData)
 
 		const { username, email, password, userId, icon } = userData
 
@@ -207,20 +208,15 @@ export class UsersService {
 			isUserIconChanged = true
 		}
 
-		console.log('Users service update payload => ', updatePayload)
-
 		if (Object.keys(updatePayload).length === 0 && !isUserIconChanged)
 			throw new BadRequestException('No data provided to update')
 
 		try {
-			console.log('update payload => ', updatePayload)
 			await this.userRepository.update(existingUser.id, updatePayload)
 
 			const updatedUser = await this.userRepository.findOne({
 				where: { id: existingUser.id }
 			})
-
-			console.log('updatedUser => ', updatedUser)
 
 			if (isUsernameChanged) {
 				const pathToUserDir = join(pathToUploadsDir, existingUser.username)
@@ -230,7 +226,6 @@ export class UsersService {
 
 			return updatedUser
 		} catch (err) {
-			console.log('catch')
 			throw new RpcException(err)
 		}
 	}

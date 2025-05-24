@@ -24,11 +24,6 @@ export class AppUsersController {
 		private readonly usersService: AppUsersService
 	) { }
 
-	@Get('all-cookies')
-	getAllCookies(@Req() req: IRequest) {
-		return req.cookies
-	}
-
 	@Get('me')
 	async getCurrentUser(@CurrentUser() user: UserResponseDto) {
 		if (!user)

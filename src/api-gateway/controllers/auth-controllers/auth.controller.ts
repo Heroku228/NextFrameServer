@@ -50,7 +50,6 @@ export class AuthController {
 		@Body() payload: CreateUserDto,
 	) {
 		if (req.cookies['jwt']) {
-			console.log('LOGIN')
 			throw new BadRequestException('The user is already authorized')
 		}
 

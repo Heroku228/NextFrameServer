@@ -63,7 +63,11 @@ export class AuthService {
 		const userData: UserResponseDto = await firstValueFrom(
 			this.usersClient.send('create-user', user))
 
-		const payload = { sub: userData.id, username: userData.username }
+		const payload = {
+			sub: userData.id,
+			username: userData.username,
+			roles: userData.roles
+		}
 
 		const token = this.jwtService.sign(payload, {
 			secret: process.env.JWT_KEY,

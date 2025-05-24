@@ -36,6 +36,7 @@ export class UsersController {
 
 	@MessagePattern('clear-all-data')
 	async clear() {
+		console.log('mess parttern pclear all data')
 		return await this.usersService.clear()
 	}
 
@@ -73,7 +74,7 @@ export class UsersController {
 		return await this.usersService.setBecomeSeller(userId)
 	}
 
-	@MessagePattern('set-user-account-by-id')
+	@MessagePattern('delete-user-account-by-id')
 	async deleteUserAccountByID(@Payload() userId: string) {
 		return await this.usersService.deleteUserAccountByID(userId)
 	}
