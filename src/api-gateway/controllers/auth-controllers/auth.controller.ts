@@ -77,7 +77,6 @@ export class AuthController {
 					pathToUserIcon: pathToUserIcon
 				}
 			}
-
 		} catch (err) {
 			const error = err as TRegistrationFailedResponse
 
@@ -92,7 +91,7 @@ export class AuthController {
 	@Post('login')
 	async login(
 		@Body() credentials: UserCredentials,
-		@Req() req: IRequest
+		@Req() req: IRequest,
 	) {
 		if (req.cookies['jwt'])
 			throw new BadRequestException('The user is already authorized')
@@ -112,6 +111,7 @@ export class AuthController {
 		const { responseUser, accessToken } = result
 
 		req.newAccessToken = accessToken
+		req.isSeller = responseUser.isSeller
 
 		const response: ApiResponse<UserResponseDto> = {
 			status: API_STATUS.SUCCESS,

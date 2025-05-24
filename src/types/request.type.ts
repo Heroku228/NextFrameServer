@@ -4,6 +4,7 @@ import { User } from 'microservices/users-microservice/entities/user.entity'
 
 export interface IRequest extends Request {
 	newAccessToken: string,
-	user: User
+	user: User,
+	isSeller: boolean
 }
 
