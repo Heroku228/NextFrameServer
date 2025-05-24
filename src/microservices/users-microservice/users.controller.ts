@@ -68,8 +68,9 @@ export class UsersController {
 	}
 
 	@MessagePattern('set-become-seller')
-	async setBecomeSeller(@Payload() username: string) {
-		return await this.usersService.setBecomeSeller(username)
+	async setBecomeSeller(@Payload() userId: string) {
+		console.log('set become seller id => ', userId)
+		return await this.usersService.setBecomeSeller(userId)
 	}
 
 	@MessagePattern('set-user-account-by-id')

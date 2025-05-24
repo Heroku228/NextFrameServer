@@ -1,4 +1,4 @@
-import { BadRequestException, Body, ConflictException, Controller, Inject, InternalServerErrorException, Patch, Req, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, ConflictException, Controller, Inject, InternalServerErrorException, Patch, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
@@ -9,6 +9,8 @@ import { Roles } from 'common/decorators/Roles.decorator'
 import { CookieUserGuard } from 'common/guards/cookie-user.guard'
 import { RolesGuard } from 'common/guards/RolesGuard.guard'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
+import { setDefaultCookie } from 'common/utils/set-cookie'
+import { Response } from 'express'
 import { TransferredFile, UpdateUserData } from 'microservices/users-microservice/entities/dto/update-user.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
@@ -115,16 +117,28 @@ export class PatchUserController {
 	}
 
 	@Patch('become-seller')
-	async becomeSeller(@CurrentUser() user: UserResponseDto) {
-		const { isSeller, username } = user
+	async becomeSeller(
+		@CurrentUser() user: UserRequest.ICurrentUser,
+		@Res() res: Response
+	) {
+		const { sub } = user
 
-		if (isSeller)
-			return { message: 'User is already a seller' }
-		console.log('user: ', user)
-		// TODO
-		this.usersService.setBecomeSeller(username)
+		const userResponse = await firstValueFrom(
+			this.usersService.setBecomeSeller(sub)
+				.pipe(catchError(() => throwError(() => new BadRequestException('Cannot change user role')))
+				)
+		)
 
-		return `User: ${user.username} now is a seller`
+		if (!userResponse)
+			throw new ConflictException('Cannot change user status')
+
+		setDefaultCookie(res, 'isSeller', true)
+
+		res.send({
+			message: `User: ${userResponse.username} now is a seller`
+		})
+
+		return
 	}
 
 	private handleUpdateError(err: unknown): never {
@@ -132,4 +146,4 @@ export class PatchUserController {
 		const detail = simplifyDuplicateKeyMessage(error.detail)
 		throw new ConflictException('Cannot update user data', detail)
 	}
-} ``
+}

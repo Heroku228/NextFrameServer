@@ -94,11 +94,8 @@ export class AuthController {
 		@Body() credentials: UserCredentials,
 		@Req() req: IRequest
 	) {
-		if (req.cookies['jwt']) {
-			console.log('LOGIN')
+		if (req.cookies['jwt'])
 			throw new BadRequestException('The user is already authorized')
-		}
-
 
 		const { username, password } = credentials
 

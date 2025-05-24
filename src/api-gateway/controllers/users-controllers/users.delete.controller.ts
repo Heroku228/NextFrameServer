@@ -1,4 +1,4 @@
-import { Controller, Delete, ForbiddenException, Param, Res, UseGuards } from '@nestjs/common'
+import { Controller, Delete, ForbiddenException, Param, Req, Res, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { Roles } from 'common/decorators/Roles.decorator'
@@ -12,11 +12,26 @@ import { rm } from 'fs/promises'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { homedir } from 'os'
 import { join } from 'path'
+import { IRequest } from 'types/request.type'
 
 @Controller('users')
 @UseGuards(CookieUserGuard)
 export class DeleteUsersController {
 	constructor(private readonly usersService: AppUsersService) { }
+
+	@Delete('clear-all-cookies')
+	clearAllCookies(
+		@Res() res: Response,
+		@Req() req: IRequest) {
+
+		for (const cookie in req.cookies) {
+			console.log(cookie)
+			res.clearCookie(cookie)
+		}
+
+		res.send('clear')
+		return
+	}
 
 	@Delete('delete-account')
 	async deleteUserAccount(

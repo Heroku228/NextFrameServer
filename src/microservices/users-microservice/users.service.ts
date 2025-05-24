@@ -126,9 +126,12 @@ export class UsersService {
 		return pathToNewUserIcon
 	}
 
-	async setBecomeSeller(username: string) {
-		const updatedUser = await this.userRepository.update({ username }, { isSeller: true })
-		return plainToInstance(UserResponseDto, updatedUser)
+	async setBecomeSeller(userId: string) {
+		await this.userRepository.update(userId, { isSeller: true })
+		const user = await this.userRepository.findOne({ where: { id: userId } })
+
+		console.log('updatedUser => ', user)
+		return plainToInstance(UserResponseDto, user)
 	}
 
 	async deleteUserAccountByID(userId: string) {

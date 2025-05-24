@@ -50,8 +50,8 @@ export class AppUsersService {
 		return this.userClient.send('change-user-icon', { file, directory, user })
 	}
 
-	setBecomeSeller(username: string) {
-		return this.userClient.send('set-become-seller', { username })
+	setBecomeSeller(username: string): Observable<UserResponseDto | null> {
+		return this.userClient.send('set-become-seller', username)
 	}
 
 	deleteUserAccountByID(userId: string) {

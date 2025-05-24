@@ -1,4 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
+import { setProtectedCookie } from 'common/utils/set-cookie'
 import { Response } from 'express'
 import { Observable, tap } from 'rxjs'
 import { IRequest } from 'types/request.type'
@@ -14,12 +15,7 @@ export class JwtCookieInterceptor implements NestInterceptor {
 		return next.handle().pipe(
 			tap(() => {
 				if (request.newAccessToken) {
-					response.cookie('jwt', request.newAccessToken, {
-						httpOnly: true,
-						secure: process.env.NODE_ENV === 'production',
-						sameSite: 'lax',
-						maxAge: 24 * 60 * 60 * 1000
-					})
+					setProtectedCookie(response, 'jwt', request.newAccessToken)
 				}
 			})
 		)

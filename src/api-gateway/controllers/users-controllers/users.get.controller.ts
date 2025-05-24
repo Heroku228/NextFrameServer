@@ -1,4 +1,4 @@
-import { ConflictException, Controller, Get, Inject, NotFoundException, Param, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { ConflictException, Controller, Get, Inject, NotFoundException, Param, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
@@ -12,6 +12,7 @@ import { UserResponseDto } from 'microservices/users-microservice/entities/dto/u
 import { join } from 'path'
 import { cwd } from 'process'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
+import { IRequest } from 'types/request.type'
 
 @Controller('users')
 @UseGuards(CookieUserGuard)
@@ -22,6 +23,11 @@ export class AppUsersController {
 		@Inject()
 		private readonly usersService: AppUsersService
 	) { }
+
+	@Get('all-cookies')
+	getAllCookies(@Req() req: IRequest) {
+		return req.cookies
+	}
 
 	@Get('me')
 	async getCurrentUser(@CurrentUser() user: UserResponseDto) {
