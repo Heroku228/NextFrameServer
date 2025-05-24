@@ -3,4 +3,13 @@ export class UpdateUserData {
 	email: string
 	password: string
 	userId: string
+	icon: TransferredFile
+}
+
+
+export interface TransferredFile {
+	buffer: Buffer
+	originalname: string
+	mimetype: string
+	size: number
 }

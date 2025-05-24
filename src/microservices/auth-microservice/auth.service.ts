@@ -18,15 +18,10 @@ export class AuthService {
 	) { }
 
 	async validate(username: string, password: string) {
-		const observableUser = this.usersClient.send('find-by-username', username)
-			.pipe(
-				catchError(
-					() => throwError(
-						() => new NotFoundException('User not found'))
-				)
-			)
-
-		const user: User = await firstValueFrom(observableUser)
+		const user: User = await firstValueFrom(
+			this.usersClient.send('find-by-username', username)
+				.pipe(catchError(() => throwError(() => new NotFoundException('User not found')))
+				))
 
 		if (user && await compare(password, user.password)) {
 			const responseUser = plainToInstance(UserResponseDto, user)
@@ -38,6 +33,7 @@ export class AuthService {
 
 			return { responseUser, accessToken }
 		}
+
 		return null
 	}
 

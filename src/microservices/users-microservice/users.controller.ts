@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
 import { plainToInstance } from 'class-transformer'
 import { UpdateUserData } from './entities/dto/update-user.dto'
@@ -33,7 +33,6 @@ export class UsersController {
 		return await this.usersService.clear()
 	}
 
-
 	@MessagePattern('find-all')
 	async findAll() {
 		return await this.usersService.findAll()
@@ -43,6 +42,7 @@ export class UsersController {
 	async findByUsername(@Payload() username: string) {
 		console.log('find by username data => ', username)
 		const user = await this.usersService.findByUsername(username)
+		if (!user) throw new NotFoundException('User not found')
 		console.log('find by username user => ', user)
 		return user
 	}
@@ -78,11 +78,7 @@ export class UsersController {
 
 	@MessagePattern('update-user-data')
 	async updateUserData(@Payload() userData: UpdateUserData) {
-		console.log('users controller update user data => ', userData)
 		const updatedUser = await this.usersService.updateUserData(userData)
-
-		console.log('(update user data) => ', userData)
-
 		return plainToInstance(UserResponseDto, updatedUser)
 	}
 

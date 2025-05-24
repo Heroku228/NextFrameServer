@@ -22,8 +22,7 @@ export class AppAuthService {
 	}
 
 
-	validate(username: string, password: string): Observable<TypeObservableValidateData> {
-		console.log('validate data -> ', username, password)
+	validate(username: string, password: string): Observable<TypeObservableValidateData | null> {
 		return this.authClient.send('validate', { username, password })
 	}
 

@@ -1,9 +1,8 @@
-import { BadRequestException, Body, ConflictException, Controller, Post, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, ConflictException, Controller, NotFoundException, Post, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
 import { plainToInstance } from 'class-transformer'
-import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { API_STATUS, ApiResponse } from 'consts/ApiResponse'
@@ -14,7 +13,6 @@ import { UserCredentials } from 'microservices/users-microservice/entities/dto/u
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
-import { UserRequest } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 
 type TRegistrationFailedResponse = {
@@ -40,16 +38,16 @@ type TRegistrationFailedResponse = {
 
 
 @Controller('auth')
+@UseInterceptors(JwtCookieInterceptor)
 export class AuthController {
 	constructor(private readonly authService: AppAuthService) { }
 
 	@Post('register')
-	@UseInterceptors(JwtCookieInterceptor, FileInterceptor('icon'))
+	@UseInterceptors(FileInterceptor('icon'))
 	async register(
 		@UploadedFile() file: Express.Multer.File,
 		@Req() req: IRequest,
 		@Body() payload: CreateUserDto,
-		@CurrentUser() currentUser: UserRequest.ICurrentUser
 	) {
 		if (req.cookies['jwt']) {
 			console.log('LOGIN')
@@ -94,8 +92,7 @@ export class AuthController {
 	@Post('login')
 	async login(
 		@Body() credentials: UserCredentials,
-		@Res({ passthrough: true }) res: Response,
-		@Req() req: Request
+		@Req() req: IRequest
 	) {
 		if (req.cookies['jwt']) {
 			console.log('LOGIN')
@@ -107,18 +104,17 @@ export class AuthController {
 
 		const result = await firstValueFrom(
 			this.authService.validate(username, password)
-				.pipe(catchError(() => throwError(() => new UnauthorizedException('No valid data')))
+				.pipe(catchError(() => throwError(() => new NotFoundException('User not found')))
 				)
 		)
 
+		if (!result) {
+			throw new NotFoundException('User not found')
+		}
+
 		const { responseUser, accessToken } = result
 
-		res.cookie('jwt', accessToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'lax',
-			maxAge: 24 * 60 * 60 * 1000
-		})
+		req.newAccessToken = accessToken
 
 		const response: ApiResponse<UserResponseDto> = {
 			status: API_STATUS.SUCCESS,
@@ -126,11 +122,7 @@ export class AuthController {
 			data: responseUser
 		}
 
-		res
-			.status(response.statusCode)
-			.json(response)
-
-		return
+		return response
 	}
 
 	@Post('logout')

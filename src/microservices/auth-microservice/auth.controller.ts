@@ -9,24 +9,14 @@ type TPayloadCredentials = {
 	password: string
 }
 
-type TTokenPayload = {
-	id: string,
-	username: string
-}
-
 @Controller('auth')
 export class AuthController {
 	constructor(private readonly authService: AuthService) { }
 
 	@MessagePattern('validate')
 	async validate(@Payload() payload: TPayloadCredentials) {
-		console.log('payload data -> ', payload)
-
 		const { username, password } = payload
-
-		const result = await this.authService.validate(username, password)
-		console.log('validate controller result -> ', result)
-		return result
+		return await this.authService.validate(username, password)
 	}
 
 	@MessagePattern('register')

@@ -53,7 +53,7 @@ export class DeleteUsersController {
 	@UseGuards(RolesGuard)
 	@Roles('admin')
 	async clear() {
-		await this.usersService.clear()
+		this.usersService.clear()
 		await rm(join(homedir(), 'next-frame', 'uploads'), { force: true, recursive: true })
 		return 'Clear'
 	}

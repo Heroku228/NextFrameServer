@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, NotFoundException, Param, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { ConflictException, Controller, Get, Inject, NotFoundException, Param, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
@@ -10,6 +10,7 @@ import { readdir } from 'fs/promises'
 import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { join } from 'path'
+import { cwd } from 'process'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
 
 @Controller('users')
@@ -70,10 +71,31 @@ export class AppUsersController {
 		@Res() res: Response
 	) {
 		const pathToAvatarsDir = join(directory, 'avatars')
-		const userAvatar = await readdir(pathToAvatarsDir)
+		console.log('pathToAvatarsDir', pathToAvatarsDir)
 
-		const pathToUserAvatarFile = join(pathToAvatarsDir, userAvatar[0])
-		return res.sendFile(pathToUserAvatarFile)
+		const userAvatar = await readdir(pathToAvatarsDir)
+		console.log('pathToAvatarsDir)', pathToAvatarsDir)
+
+		try {
+			const pathToUserAvatarFile = join(pathToAvatarsDir, userAvatar[0])
+			console.log('pathToUserAvatarFile ', pathToUserAvatarFile)
+			return res.sendFile(pathToUserAvatarFile)
+		} catch (err) {
+			throw new NotFoundException('The user does not have an icon')
+		}
+	}
+
+	@Get('default-icon')
+	async showDefaultIcon(
+		@Res() res: Response
+	) {
+		const pathToDefaultIcon = join(cwd(), 'uploads', 'default-icon.jpeg')
+		if (!pathToDefaultIcon) {
+			throw new ConflictException()
+		}
+
+		res.sendFile(pathToDefaultIcon)
+		return
 	}
 
 	@Get('user-icon/:username/')

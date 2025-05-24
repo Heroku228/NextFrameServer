@@ -3,10 +3,11 @@ import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
-import { writeUserIcon } from 'common/utils/WriteUserIcon'
+import { pathToUploadsDir, writeUserIcon } from 'common/utils/WriteUserIcon'
 import { ROLES, TRoles } from 'consts/Roles'
 import { readdir, rename } from 'fs/promises'
 import { join } from 'path'
+import { cwd } from 'process'
 import { lastValueFrom } from 'rxjs'
 import { Repository } from 'typeorm'
 import { UpdateUserData } from './entities/dto/update-user.dto'
@@ -125,8 +126,6 @@ export class UsersService {
 
 	async setBecomeSeller(username: string) {
 		const updatedUser = await this.userRepository.update({ username }, { isSeller: true })
-		console.log('updated user: ', updatedUser)
-
 		return plainToInstance(UserResponseDto, updatedUser)
 	}
 
@@ -154,21 +153,24 @@ export class UsersService {
 		if (!userData)
 			throw new BadRequestException('Invalid data')
 
-		console.log('users service user data => ', userData)
-		const { username, email, password, userId } = userData
-		console.log('usernmae => ', username)
+		console.log('update user data => ', userData)
+
+		const { username, email, password, userId, icon } = userData
+
+		let isUsernameChanged = false
+		let isUserIconChanged = false
 
 		const existingUser = await this.findById(userId)
-
-		console.log('EXISTINS USER => ', existingUser)
 
 		if (!existingUser)
 			throw new NotFoundException('User not found')
 
 		const updatePayload: Partial<User> = {}
 
-		if (username)
+		if (username) {
 			updatePayload.username = username
+			isUsernameChanged = true
+		}
 
 		if (email)
 			updatePayload.email = email
@@ -178,20 +180,53 @@ export class UsersService {
 			updatePayload.password = hashedPassword
 		}
 
+		if (icon) {
+			const targetUsername = isUsernameChanged ? username : existingUser.username
+			const pathToUserDir = join(cwd(), 'uploads', targetUsername)
+
+			const avatarsDir = join(pathToUserDir, 'avatars')
+			const oldAvatarsDir = join(pathToUserDir, 'oldAvatars')
+
+			const files = await readdir(join(pathToUserDir, 'avatars'))
+
+			if (files.length) {
+				await Promise.all(
+					files.map(file => rename(
+						join(avatarsDir, file),
+						join(oldAvatarsDir, file)
+					))
+				)
+			}
+
+			await writeUserIcon(targetUsername, icon)
+			isUserIconChanged = true
+		}
+
 		console.log('Users service update payload => ', updatePayload)
 
-
-		// TODO => change userIcon
-
-		if (Object.keys(updatePayload).length === 0)
+		if (Object.keys(updatePayload).length === 0 && !isUserIconChanged)
 			throw new BadRequestException('No data provided to update')
 
-		await this.userRepository.update(existingUser.id, updatePayload)
+		try {
+			console.log('update payload => ', updatePayload)
+			await this.userRepository.update(existingUser.id, updatePayload)
 
-		const updatedUser = await this.userRepository.findOne({
-			where: { id: existingUser.id }
-		})
+			const updatedUser = await this.userRepository.findOne({
+				where: { id: existingUser.id }
+			})
 
-		return updatedUser
+			console.log('updatedUser => ', updatedUser)
+
+			if (isUsernameChanged) {
+				const pathToUserDir = join(pathToUploadsDir, existingUser.username)
+				const newPathToUserDir = join(pathToUploadsDir, username)
+				await rename(pathToUserDir, newPathToUserDir)
+			}
+
+			return updatedUser
+		} catch (err) {
+			console.log('catch')
+			throw new RpcException(err)
+		}
 	}
 }

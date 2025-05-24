@@ -1,6 +1,7 @@
 
 
 export function simplifyDuplicateKeyMessage(detail: string) {
+	if (!detail) return
 	const match = detail.match(/\(([^)]+)\)=\(([^)]+)\)/)
 	if (match && match.length === 3) {
 		const field = match[1]
