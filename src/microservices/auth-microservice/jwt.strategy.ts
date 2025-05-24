@@ -24,13 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 	}
 
 	async validate(username: string) {
-		const observableUser = this.usersClient.send('find-by-username', username)
-			.pipe(
-				() => throwError(
-					() => new NotFoundException('User not found'))
-			)
-
-		const user: User = await firstValueFrom(observableUser)
+		const user: User = await firstValueFrom(
+			this.usersClient.send('find-by-username', username)
+				.pipe(() => throwError(() => new NotFoundException('User not found'))
+				))
 
 		return plainToInstance(UserResponseDto, user)
 	}

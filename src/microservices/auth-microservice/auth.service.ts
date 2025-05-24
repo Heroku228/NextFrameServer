@@ -29,6 +29,7 @@ export class AuthService {
 			const accessToken = this.jwtService.sign({
 				sub: user.id,
 				username: user.username,
+				roles: user.roles,
 			})
 
 			return { responseUser, accessToken }
@@ -41,7 +42,7 @@ export class AuthService {
 		const payload = {
 			sub: user.id,
 			username: user.username,
-			roles: user.roles
+			roles: user.roles,
 		}
 
 		return this.jwtService.sign(payload, {

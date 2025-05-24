@@ -27,7 +27,7 @@ export class User {
 	pathToUserIcon: string
 
 	@Column({ type: 'simple-array' })
-	roles: string[] = []
+	roles: string[] = ['user']
 
 	@Column()
 	password: string

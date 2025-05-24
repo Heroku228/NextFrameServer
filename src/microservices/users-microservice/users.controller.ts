@@ -28,6 +28,12 @@ export class UsersController {
 		return await this.usersService.findById(data.id)
 	}
 
+	@MessagePattern('change-role')
+	async changeRole(@Payload() data: { username: string, role: string }) {
+		const { username, role } = data
+		return await this.usersService.changeUserRole(username, role)
+	}
+
 	@MessagePattern('clear-all-data')
 	async clear() {
 		return await this.usersService.clear()

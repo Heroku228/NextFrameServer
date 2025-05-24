@@ -1,4 +1,4 @@
-import { BadRequestException, Body, ConflictException, Controller, Inject, InternalServerErrorException, Param, Patch, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, ConflictException, Controller, Inject, InternalServerErrorException, Patch, Req, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
@@ -9,11 +9,9 @@ import { Roles } from 'common/decorators/Roles.decorator'
 import { CookieUserGuard } from 'common/guards/cookie-user.guard'
 import { RolesGuard } from 'common/guards/RolesGuard.guard'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
-import { HTTP_STATUS_CODES } from 'consts/Http-status'
-import { Response } from 'express'
 import { TransferredFile, UpdateUserData } from 'microservices/users-microservice/entities/dto/update-user.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
-import { catchError, firstValueFrom, Observable, throwError } from 'rxjs'
+import { catchError, firstValueFrom, throwError } from 'rxjs'
 import { UserRequest } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 
@@ -85,7 +83,7 @@ export class PatchUserController {
 					this.handleUpdateError(err)))
 			)
 		)
-		
+
 		console.log('UPDATED USER => ', updatedUser)
 
 		if (!updatedUser) throw new BadRequestException('Cannot update user data')
@@ -101,44 +99,19 @@ export class PatchUserController {
 		return plainToInstance(UserResponseDto, updatedUser)
 	}
 
-	// @Patch('change-icon')
-	// @UseInterceptors(FileInterceptor('icon'))
-	// async changeUserIcon(
-	// 	@UploadedFile() file: Express.Multer.File,
-	// 	@CurrentUser() user: UserResponseDto,
-	// 	@UserDirectory() directory: string,
-	// ) {
-
-	// 	// TODO
-	// 	this.usersClient.send('change-user-icon', { file, directory, user })
-
-	// 	return { message: 'Icon is successfully changed' }
-	// }
-
-	@Patch('change-role/:username/:role')
+	@Patch('change-role')
 	@UseGuards(RolesGuard)
 	@Roles('admin')
-	async becomeAdmin(
-		@Param('username') username: string,
-		@Param('role') role: string,
-		@Res() res: Response
+	async changeRole(
+		@Body() body: { username: string, role: string }
 	) {
-		const observableUserRoles: Observable<string[]> = this.usersService
-			.changeUserRole(username, role)
-			.pipe(catchError(() => throwError(() =>
-				new InternalServerErrorException('Cannot change user role'))
-			))
+		const { username, role } = body
 
-		const userRoles = await firstValueFrom(observableUserRoles)
-
-		res
-			.status(HTTP_STATUS_CODES.ACCEPTED)
-			.json({
-				message: `Role updated to ${role.toUpperCase()} for user ${username}`,
-				data: userRoles
-			})
-
-		return
+		return await firstValueFrom(
+			this.usersService.changeUserRole(username, role)
+				.pipe(catchError(() => throwError(() =>
+					new BadRequestException('Cannot change user role')))
+				))
 	}
 
 	@Patch('become-seller')

@@ -42,8 +42,8 @@ export class AppUsersService {
 		return this.userClient.send('find-by-email', { email })
 	}
 
-	changeUserRole(username: string, role: string) {
-		return this.userClient.send('change-user-role', { username, role })
+	changeUserRole(username: string, role: string): Observable<string[] | null> {
+		return this.userClient.send('change-role', { username, role })
 	}
 
 	changeUserIcon(file: Express.Multer.File, directory: string, user: UserResponseDto) {

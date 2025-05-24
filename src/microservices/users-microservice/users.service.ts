@@ -102,7 +102,9 @@ export class UsersService {
 				roles: Array.from(new Set([...user.roles, role]))
 			})
 
-		return user.roles
+		const updatedUser = await this.userRepository.findOne({ where: { id: user.id } })
+
+		return plainToInstance(UserResponseDto, updatedUser)
 	}
 
 	async changeUserIcon(
