@@ -4,6 +4,7 @@ import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
 import { plainToInstance } from 'class-transformer'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
+import { PreventAuthorizedInterceptor } from 'common/interceptors/PreventAuthorizedInterceptor'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { API_STATUS, ApiResponse } from 'consts/ApiResponse'
 import { HTTP_STATUS_CODES } from 'consts/Http-status'
@@ -38,7 +39,7 @@ type TRegistrationFailedResponse = {
 
 
 @Controller('auth')
-@UseInterceptors(JwtCookieInterceptor)
+@UseInterceptors(JwtCookieInterceptor, PreventAuthorizedInterceptor)
 export class AuthController {
 	constructor(private readonly authService: AppAuthService) { }
 
@@ -49,9 +50,6 @@ export class AuthController {
 		@Req() req: IRequest,
 		@Body() payload: CreateUserDto,
 	) {
-		if (req.cookies['jwt']) {
-			throw new BadRequestException('The user is already authorized')
-		}
 
 		if (!file)
 			throw new BadRequestException({
@@ -92,9 +90,6 @@ export class AuthController {
 		@Body() credentials: UserCredentials,
 		@Req() req: IRequest,
 	) {
-		if (req.cookies['jwt'])
-			throw new BadRequestException('The user is already authorized')
-
 		const { username, password } = credentials
 
 		const result = await firstValueFrom(
@@ -103,9 +98,10 @@ export class AuthController {
 				)
 		)
 
-		if (!result) {
-			throw new NotFoundException('User not found')
-		}
+		if (!result) throw new NotFoundException('User not found')
+
+		if ('status' in result) throw new UnauthorizedException(result)
+
 
 		const { responseUser, accessToken } = result
 

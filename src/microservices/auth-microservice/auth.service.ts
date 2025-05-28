@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ClientProxy } from '@nestjs/microservices'
 import { compare, hash } from 'bcrypt'
@@ -8,6 +8,7 @@ import { catchError, firstValueFrom, throwError } from 'rxjs'
 import { CreateUserDto } from '../users-microservice/entities/dto/create-user.dto'
 import { UserResponseDto } from '../users-microservice/entities/dto/user-response.dto'
 import { User } from '../users-microservice/entities/user.entity'
+import { AUTH_RESPONSE } from './static/auth-response'
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
 				.pipe(catchError(() => throwError(() => new NotFoundException('User not found')))
 				))
 
+
 		if (user && await compare(password, user.password)) {
 			const responseUser = plainToInstance(UserResponseDto, user)
 
@@ -32,10 +34,16 @@ export class AuthService {
 				roles: user.roles,
 			})
 
+
+			console.log('password is match')
 			return { responseUser, accessToken }
 		}
 
-		return null
+		console.log('password dont match')
+		return {
+			message: AUTH_RESPONSE.PASSWORD_DONT_MATCH,
+			status: HttpStatus.UNAUTHORIZED
+		}
 	}
 
 	generateToken(user: User | UserResponseDto) {

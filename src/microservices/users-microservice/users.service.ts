@@ -3,7 +3,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
-import { pathToUploadsDir, writeUserIcon } from 'common/utils/WriteUserIcon'
+import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { ROLES, TRoles } from 'consts/Roles'
 import { readdir, rename } from 'fs/promises'
 import { join } from 'path'
@@ -156,60 +156,68 @@ export class UsersService {
 
 		this.deleteUserAccountByID(user.id)
 	}
-
 	async updateUserData(userData: UpdateUserData) {
-		if (!userData)
+		if (!userData || typeof userData !== 'object') {
 			throw new BadRequestException('Invalid data')
+		}
 
 		const { username, email, password, userId, icon } = userData
 
-		let isUsernameChanged = false
-		let isUserIconChanged = false
-
 		const existingUser = await this.findById(userId)
-
-		if (!existingUser)
+		if (!existingUser) {
 			throw new NotFoundException('User not found')
-
-		const updatePayload: Partial<User> = {}
-
-		if (username) {
-			updatePayload.username = username
-			isUsernameChanged = true
 		}
 
-		if (email)
-			updatePayload.email = email
+		const currentUsername = existingUser.username
+		const uploadsDir = join(cwd(), 'uploads')
+		const updatePayload: Partial<User> = {}
+
+		const isUsernameChanged = username && username !== currentUsername
+		const effectiveUsername = isUsernameChanged ? username : currentUsername
+		const userDir = join(uploadsDir, effectiveUsername)
+
+		if (username) updatePayload.username = username
+		if (email) updatePayload.email = email
 
 		if (password) {
 			const hashedPassword = await hash(password, 10)
 			updatePayload.password = hashedPassword
 		}
 
+		let hasIconUpdated = false
+
 		if (icon) {
-			const targetUsername = isUsernameChanged ? username : existingUser.username
-			const pathToUserDir = join(cwd(), 'uploads', targetUsername)
+			const originalUserDir = join(uploadsDir, currentUsername)
 
-			const avatarsDir = join(pathToUserDir, 'avatars')
-			const oldAvatarsDir = join(pathToUserDir, 'oldAvatars')
-
-			const files = await readdir(join(pathToUserDir, 'avatars'))
-
-			if (files.length) {
-				await Promise.all(
-					files.map(file => rename(
-						join(avatarsDir, file),
-						join(oldAvatarsDir, file)
-					))
-				)
+			if (isUsernameChanged) {
+				await rename(originalUserDir, userDir).catch(() => {
+					throw new BadRequestException('Failed to rename user directory')
+				})
 			}
 
-			await writeUserIcon(targetUsername, icon)
-			isUserIconChanged = true
+			const avatarsDir = join(userDir, 'avatars')
+			const oldAvatarsDir = join(userDir, 'oldAvatars')
+
+			try {
+				const files = await readdir(avatarsDir)
+				if (files.length) {
+					await Promise.all(
+						files.map(file =>
+							rename(join(avatarsDir, file), join(oldAvatarsDir, file))
+						)
+					)
+				}
+			} catch (e) {
+				// Пропускаем, если каталог отсутствует или пуст
+			}
+
+			await writeUserIcon(effectiveUsername, icon)
+			hasIconUpdated = true
 		}
 
-		if (Object.keys(updatePayload).length === 0 && !isUserIconChanged)
+		if (Object.keys(updatePayload).length === 0 && !hasIconUpdated) {
 			throw new BadRequestException('No data provided to update')
+		}
 
 		try {
 			await this.userRepository.update(existingUser.id, updatePayload)
@@ -217,12 +225,6 @@ export class UsersService {
 			const updatedUser = await this.userRepository.findOne({
 				where: { id: existingUser.id }
 			})
-
-			if (isUsernameChanged) {
-				const pathToUserDir = join(pathToUploadsDir, existingUser.username)
-				const newPathToUserDir = join(pathToUploadsDir, username)
-				await rename(pathToUserDir, newPathToUserDir)
-			}
 
 			return updatedUser
 		} catch (err) {

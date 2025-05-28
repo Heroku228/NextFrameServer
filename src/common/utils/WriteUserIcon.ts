@@ -39,5 +39,8 @@ export const writeUserIcon = async (username: string,
 		actualBuffer
 	)
 
-	return USERS_ROUTES.PATH_TO_USER_AVATAR
+
+	const pathToUserAvatar = `${USERS_ROUTES.PATH_TO_USER_AVATAR}/${username}`
+
+	return pathToUserAvatar
 }

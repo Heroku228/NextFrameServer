@@ -1,14 +1,12 @@
-import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { HttpStatus, Inject, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
+import { TypeObservableValidateData } from 'microservices/auth-microservice/static/types/auth.types'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { Observable } from 'rxjs'
 
 
-type TypeObservableValidateData = {
-	responseUser: UserResponseDto
-	accessToken: string
-}
+
 
 @Injectable()
 export class AppAuthService {
