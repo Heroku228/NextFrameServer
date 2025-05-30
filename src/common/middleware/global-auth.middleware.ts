@@ -3,7 +3,9 @@ import { JwtService } from '@nestjs/jwt'
 import { NextFunction, Response } from 'express'
 import { IRequest } from 'types/request.type'
 
-
+/**
+ * Забирает из Request jwt токен и проверяет на валидность
+ */
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
 	constructor(private readonly jwtService: JwtService) { }

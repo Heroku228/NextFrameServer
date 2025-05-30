@@ -4,6 +4,10 @@ import { ROLES } from 'consts/Roles'
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { ROLES_KEY } from '../decorators/Roles.decorator'
 
+/**
+ * Проверяем имеет ли текущий пользователь необходимую роль
+ */
+
 @Injectable()
 export class RolesGuard implements CanActivate {
 	constructor(private reflector: Reflector) { }

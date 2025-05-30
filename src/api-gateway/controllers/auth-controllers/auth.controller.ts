@@ -51,11 +51,10 @@ export class AuthController {
 		@Body() payload: CreateUserDto,
 	) {
 
-		if (!file)
-			throw new BadRequestException({
-				access: false,
-				message: '[Error] File (icon) is missing'
-			})
+		if (!file) throw new BadRequestException({
+			access: false,
+			message: '[Error] File (icon) is missing'
+		})
 
 		const user = plainToInstance(User, payload)
 		const pathToUserIcon = await writeUserIcon(user.username, file)

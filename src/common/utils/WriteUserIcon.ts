@@ -6,11 +6,20 @@ import { TransferredFile } from 'microservices/users-microservice/entities/dto/u
 import { extname, join } from 'path'
 import { cwd } from 'process'
 
-
+/**
+ * Путь до директории 'uploads', которая содержит файлы пользователей
+ */
 export const pathToUploadsDir = join(cwd(), 'uploads')
 
-export const writeUserIcon = async (username: string,
-	file: Express.Multer.File | TransferredFile) => {
+/**
+ * Записывает иконку пользователя в 'avatars' директорию, а так же перемещает старую аватарку в 'oldAvatars'
+ * @param username - логин пользователя и часть пути к 'avatars' пользователя, file - иконка пользователя
+ * @returns Вернет путь до текущей аватарки пользователя
+ */
+export const writeUserIcon = async (
+	username: string,
+	file: Express.Multer.File | TransferredFile
+) => {
 	const pathToUserAvatarsDir = join(pathToUploadsDir, username, 'avatars')
 	const pathToUserOldAvatarsDir = join(pathToUploadsDir, username, 'oldAvatars')
 

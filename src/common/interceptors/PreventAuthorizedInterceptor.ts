@@ -2,7 +2,9 @@ import { BadRequestException, CallHandler, ExecutionContext, Injectable, NestInt
 import { tap } from 'rxjs'
 import { IRequest } from 'types/request.type'
 
-
+/**
+ * Блокируем доступ к ресурсу, если пользователь уже авторизован
+ */
 @Injectable()
 export class PreventAuthorizedInterceptor implements NestInterceptor {
 	intercept(context: ExecutionContext, next: CallHandler<any>) {

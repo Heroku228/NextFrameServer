@@ -4,7 +4,9 @@ import { Response } from 'express'
 import { Observable, tap } from 'rxjs'
 import { IRequest } from 'types/request.type'
 
-
+/**
+ * Устанавлием JWT токен для пользователя и статус isSeller
+ */
 
 @Injectable()
 export class JwtCookieInterceptor implements NestInterceptor {

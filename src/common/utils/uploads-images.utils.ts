@@ -1,17 +1,34 @@
 import { PRODUCTS_ROUTES } from 'consts/Routes'
 import { randomUUID } from 'crypto'
+import * as dotenv from 'dotenv'
 import { existsSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { extname, join } from 'path'
 
-const PARALLEL_WRITE_LIMIT = 8
+dotenv.config()
 
+
+/**
+ * Берем из .env-variables значение для параллельной загрузки,
+ * если значение пустое, то инициализуется как 8
+ */
+const PARALLEL_WRITE_LIMIT = Number(process.env.PARALLEL_WRITE_LIMIT) || 8
+
+/** 
+ * Загружает один файл в директорию
+ * @returns Вернет URL ввида: http://localhost:3000/api/v1/public/products/product-image/{нормализованное имя файла}
+ */
 export const uploadFile = async (directory: string,
-	images: Express.Multer.File) => {
-	const savedFile = await saveFile(images, directory)
+	image: Express.Multer.File) => {
+	const savedFile = await saveFile(image, directory)
 	return `${PRODUCTS_ROUTES.PUBLIC_PRODUCT_IMAGE}/${savedFile}`
 }
 
+/** 
+ * Параллельно загружает загружает файлы в директорию
+ * @param Принимает директорию и файлы типа Express.Multer.File
+ * @returns Вернет массив строк, которые содержат в себе URL путь до файлов
+ */
 export const uploadFiles = async (
 	directory: string,
 	images: Express.Multer.File[]
@@ -29,6 +46,7 @@ export const uploadFiles = async (
 	}
 
 	const savedFileOnFS: string[] = []
+
 	for (const file of images) {
 		const path = await saveFile(file, directory)
 		savedFileOnFS.push(path)
@@ -38,17 +56,31 @@ export const uploadFiles = async (
 	return savedFileOnFS.map(file => `${PRODUCTS_ROUTES.PUBLIC_PRODUCT_IMAGE}/${file}`)
 }
 
+
+/**
+ * Сохраняет файл в указанную директорию и вернет нормальзованное (normalizeFilename) имя файла
+ * @param принимает Express.Multer.File и директорию
+ * @returns Возвращает новое имя файла
+ */
 const saveFile = async (file: Express.Multer.File, directory: string) => {
 	const filename = normalizeFilename(file)
 	const filePath = join(directory, filename)
 
 	await writeFile(filePath, file.buffer)
+
 	return filename
 }
 
+/**
+ * Сгенерирует случайное имя для файла
+ * @param принимает Express.Multer.File
+ * @returns Возвращает новое имя файла
+ */
 const normalizeFilename = (file: Express.Multer.File) => {
 	const extension = extname(file.originalname)
+
 	const originalFileName = file.originalname.replace(extension, '')
 	const safeName = originalFileName.replace(/[^\w\d-_]/g, '')
+
 	return `${safeName}-${randomUUID().slice(0, 10)}${extension}`
 }

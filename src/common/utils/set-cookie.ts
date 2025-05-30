@@ -1,6 +1,9 @@
 import { Response } from 'express'
 
-
+/**
+ * Устанавлием для клиента защищенную куку
+ * (JS не будет иметь доступа к ней)
+ */
 export const setProtectedCookie = (res: Response, name: string, val: any) => (
 	res.cookie(name, val, {
 		httpOnly: true,
@@ -9,6 +12,10 @@ export const setProtectedCookie = (res: Response, name: string, val: any) => (
 		maxAge: 24 * 60 * 60 * 1000
 	})
 )
+
+/**
+ * Устанавливаем обычную куку клиенту
+ */
 
 export const setDefaultCookie = (res: Response, name: string, val: any) => {
 	res.cookie(name, val, {

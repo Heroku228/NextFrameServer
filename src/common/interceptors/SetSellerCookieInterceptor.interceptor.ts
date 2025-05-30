@@ -2,6 +2,9 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { tap } from 'rxjs'
 
 
+/**
+ * Устанавливаем клиенту куку: "isSeller"
+ */
 @Injectable()
 export default class SetSellerCookieInterceptor implements NestInterceptor {
 	intercept(context: ExecutionContext, next: CallHandler<any>) {
