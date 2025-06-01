@@ -14,6 +14,6 @@ export function simplifyDuplicateKeyMessage(detail: string): string | undefined 
 		console.log('field => ', field)
 		const value = match[2]
 		console.log('value => ', value)
-		return `${field} => ${value} already exists.`
+		return `${field} ${value} уже существует.`
 	}
 }

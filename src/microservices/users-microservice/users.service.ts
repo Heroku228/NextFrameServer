@@ -55,7 +55,7 @@ export class UsersService {
 			return await this.userRepository.save(user)
 		} catch (err) {
 			if (err.code === '23505') {
-				const detail = err?.driverError?.detail || 'User with such email or username already exists'
+				const detail = err?.driverError?.detail || 'Пользователь с таким логином или Email уже существует'
 				throw new RpcException(new ConflictException(detail))
 			}
 			throw err

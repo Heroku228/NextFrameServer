@@ -1,12 +1,14 @@
-import { BadRequestException, Body, ConflictException, Controller, Logger, NotFoundException, Post, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common'
+import { BadRequestException, Body, ConflictException, Controller, Logger, NotFoundException, Post, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
 import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
 import { PreventAuthorizedInterceptor } from 'common/interceptors/PreventAuthorizedInterceptor'
+import { FileRequiredPipe } from 'common/pipe/file-required.pipe'
+import { RegisterPipe } from 'common/pipe/register.pipe'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { API_STATUS, ApiResponse as IApiResponse } from 'constants/ApiResponse'
 import { HTTP_STATUS_CODES } from 'constants/Http-status'
@@ -57,16 +59,20 @@ export class AuthController {
 	 * @returns Объект с информацией о созданном пользователе и пути к иконке
 	 */
 	@ApiOperation(REGISTER_API_OPERATION)
-	@ApiResponse({})
+	@ApiOkResponse({ description: 'Пользователь успешно зарегистрирован', type: UserResponseDto })
+	@ApiBadRequestResponse({ description: 'Некорректные данные пользователя' })
 	@Post('register')
+	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(FileInterceptor('icon'))
-	@UsePipes(new ValidationPipe({ whitelist: true, transform: true, stopAtFirstError: true }))
 	async register(
-		@UploadedFile() file: Express.Multer.File,
-		@Body() payload: CreateUserDto,
+		@Body(RegisterPipe) payload: CreateUserDto,
+		@UploadedFile(FileRequiredPipe) file: Express.Multer.File,
 		@Req() req: IRequest,
 	) {
 		const user = plainToInstance(User, payload)
+		this.logger.debug('Register контроллер - данные из запроса: ', payload)
+		this.logger.debug('Register контроллер - файл иконки пользователя: ', file)
+
 		const pathToUserIcon = await writeUserIcon(user.username, file)
 		user.pathToUserIcon = pathToUserIcon
 

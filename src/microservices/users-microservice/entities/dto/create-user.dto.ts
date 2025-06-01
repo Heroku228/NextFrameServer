@@ -2,23 +2,23 @@ import { IsDefined, IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength
 
 
 export class CreateUserDto {
-	@IsEmail({}, { message: 'Incorrect email' })
+	@IsEmail({}, { message: 'Некорректная почта' })
 	@IsNotEmpty()
 	email: string
 
 	@IsString()
 	@IsNotEmpty()
-	@MinLength(3, { message: 'Username cannot be less than 3 characters' })
-	@MaxLength(20, { message: 'Username cannot be more than 20 characters' })
+	@MinLength(3, { message: 'Логин не может быть меньше чем 3 символа' })
+	@MaxLength(20, { message: 'Логин не может быть больше чем 20 символов' })
 	username: string
 
 	@IsString()
-	@IsNotEmpty({ message: 'Password cannot to be null' })
-	@IsDefined({ message: 'Password cannot to be null' })
-	@MinLength(6, { message: 'Password cannot be less than 6 characters' })
-	@MaxLength(32, { message: 'The password is too long' })
+	@IsNotEmpty({ message: 'Пароль не может быть пустым' })
+	@IsDefined({ message: 'Пароль не может быть пустым' })
+	@MinLength(6, { message: 'Пароль должен содержать не менее 6 символов' })
+	@MaxLength(32, { message: 'Пароль слишком длинный' })
 	@Matches(/(?=.*[A-Z])(?=.*\d)/, {
-		message: 'The password must contain at least one capital letter and a number.'
+		message: 'Пароль должен содержать в себе как минимум один заглавный символ и одну цифру.'
 	})
 	password: string
 

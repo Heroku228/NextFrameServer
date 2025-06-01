@@ -12,7 +12,7 @@ export class SellerGuard implements CanActivate {
 		if (!user) throw new UnauthorizedException()
 
 		if (!user.isSeller) {
-			throw new BadRequestException('You need to become a seller to use product service')
+			throw new BadRequestException('Необходимо иметь статус продавца(seller), чтобы иметь доступ к этому ресурсу')
 		} else return true
 	}
 }

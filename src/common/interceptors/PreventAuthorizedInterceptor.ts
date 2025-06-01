@@ -8,17 +8,14 @@ import { IRequest } from 'types/request.type'
 @Injectable()
 export class PreventAuthorizedInterceptor implements NestInterceptor {
 	intercept(context: ExecutionContext, next: CallHandler<any>) {
-
 		const request: IRequest = context.switchToHttp().getRequest()
 
 		return next.handle().pipe(
 			tap(() => {
 				if (request.cookies['jwt'])
-					throw new BadRequestException('The user is already authorized')
+					throw new BadRequestException('Пользователь уже авторизован')
 			})
 		)
-
-
 	}
 }
 
