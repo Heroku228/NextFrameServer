@@ -27,6 +27,7 @@ export const FILE_SYSTEM_ROUTES = {
  */
 export const USERS_ROUTES = {
 	PATH_TO_USER_AVATAR: 'http://localhost:3000/api/v1/users/user-icon',
+	PATH_TO_DEFAULT_ICON: 'http://localhost:3000/api/v1/users/default-icon',
 	ME_ROUTE: 'http://localhost:3000/api/v1/users/me'
 } as const
 

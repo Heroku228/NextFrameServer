@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { UserDirectory } from 'common/decorators/user-directory.decorator'
 import { CookieUserGuard } from 'common/guards/cookie-user.guard'
+import { pathToDefaultIconOnFS } from 'constants/common'
 import { Response } from 'express'
 import { readdir } from 'fs/promises'
 import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
@@ -64,7 +65,7 @@ export class AppUsersController {
 	async showDefaultIcon(
 		@Res() res: Response
 	) {
-		const pathToDefaultIcon = join(cwd(), 'uploads', 'default-icon.jpeg')
+		const pathToDefaultIcon = pathToDefaultIconOnFS
 		if (!pathToDefaultIcon) {
 			throw new ConflictException()
 		}

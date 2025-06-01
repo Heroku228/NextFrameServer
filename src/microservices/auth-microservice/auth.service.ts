@@ -35,11 +35,11 @@ export class AuthService {
 			})
 
 
-			console.log('password is match')
+			console.log('Пароли совпали')
 			return { responseUser, accessToken }
 		}
 
-		console.log('password dont match')
+		console.log('Пароли НЕ совпали')
 		return {
 			message: AUTH_RESPONSE.PASSWORD_DONT_MATCH,
 			status: HttpStatus.UNAUTHORIZED

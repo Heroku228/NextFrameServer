@@ -10,12 +10,16 @@ type TFileRequets = {
 	size: number
 }
 
+/**
+ * @des Валидирует файл 
+ */
 @Injectable()
 export class FileRequiredPipe implements PipeTransform {
 	transform(value: TFileRequets) {
 		const threeMB = 3 * 1024 * 1024 // 3 MB
+		console.log('valiue => ', value)
 
-		if (!value) throw new BadRequestException('Отсутствует файл в запросе')
+		if (!value) return null
 
 		if (!value.mimetype.startsWith('image/')) {
 			throw new BadRequestException('Иконка пользователя должна быть изображением')

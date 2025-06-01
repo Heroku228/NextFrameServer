@@ -8,19 +8,23 @@ import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
 import { PreventAuthorizedInterceptor } from 'common/interceptors/PreventAuthorizedInterceptor'
 import { FileRequiredPipe } from 'common/pipe/file-required.pipe'
+import { LoginPipe } from 'common/pipe/login.pipe'
 import { RegisterPipe } from 'common/pipe/register.pipe'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { API_STATUS, ApiResponse as IApiResponse } from 'constants/ApiResponse'
+import { pathToDefaultIconWEB } from 'constants/common'
 import { HTTP_STATUS_CODES } from 'constants/Http-status'
 import { Request, Response } from 'express'
 import { CreateUserDto } from 'microservices/users-microservice/entities/dto/create-user.dto'
 import { UserCredentials } from 'microservices/users-microservice/entities/dto/user-credentials.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from 'microservices/users-microservice/entities/user.entity'
+import { randomUUID } from 'node:crypto'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
 import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 import { REGISTER_API_OPERATION } from './auth.swagger'
+import { USERS_ROUTES } from 'constants/Routes'
 
 type TRegistrationFailedResponse = {
 	response: {
@@ -73,8 +77,13 @@ export class AuthController {
 		this.logger.debug('Register контроллер - данные из запроса: ', payload)
 		this.logger.debug('Register контроллер - файл иконки пользователя: ', file)
 
-		const pathToUserIcon = await writeUserIcon(user.username, file)
-		user.pathToUserIcon = pathToUserIcon
+		file
+			? user.pathToUserIcon = await writeUserIcon(user.username, file)
+			: user.pathToUserIcon = USERS_ROUTES.PATH_TO_DEFAULT_ICON
+
+
+		console.log("USER => ", user)
+		console.log('path => ', user.pathToUserIcon)
 
 		try {
 			const { createdUser, token } = await firstValueFrom(this.authService.register(user))
@@ -85,8 +94,8 @@ export class AuthController {
 			return {
 				createdUser: plainToInstance(UserResponseDto, createdUser),
 				icon: {
-					filename: file.originalname,
-					pathToUserIcon: pathToUserIcon
+					filename: file ? file.originalname : user.username + randomUUID().toString().slice(0, 10),
+					pathToUserIcon: user.pathToUserIcon
 				}
 			}
 		} catch (err) {
@@ -102,11 +111,12 @@ export class AuthController {
 
 	@Post('login')
 	async login(
-		@Body() credentials: UserCredentials,
+		@Body(LoginPipe) credentials: UserCredentials,
 		@CurrentUser() user: ICurrentUser,
 		@Req() req: IRequest,
 	) {
-		if (user) throw new BadRequestException('User is already authenticated')
+		if (user)
+			throw new BadRequestException('Пользователь уже авторизован')
 
 		const { username, password } = credentials
 

@@ -1,7 +1,7 @@
 
 export const API_STATUS = {
-	SUCCESS: 'success',
-	ERROR: 'error'
+	SUCCESS: 'успех',
+	ERROR: 'ошибка'
 } as const
 
 export type API_STATUS = typeof API_STATUS[keyof typeof API_STATUS]
