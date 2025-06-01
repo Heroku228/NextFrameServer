@@ -10,7 +10,7 @@ import { rm } from 'fs/promises'
 import { join } from 'path'
 import { cwd } from 'process'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
-import { UserRequest } from 'types/current-user.type'
+import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 
 @Controller('users')
@@ -36,7 +36,7 @@ export class DeleteUsersController {
 	@Roles('admin')
 	@UseGuards(RolesGuard)
 	async deleteUserAccount(
-		@CurrentUser() user: UserRequest.ICurrentUser,
+		@CurrentUser() user: ICurrentUser,
 		@UserDirectory() directory: string,
 		@Res() res: Response,
 		@Req() req: IRequest

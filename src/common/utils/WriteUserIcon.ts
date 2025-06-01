@@ -1,4 +1,4 @@
-import { USERS_ROUTES } from 'consts/Routes'
+import { USERS_ROUTES } from 'constants/Routes'
 import { randomUUID } from 'crypto'
 import { existsSync, } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'

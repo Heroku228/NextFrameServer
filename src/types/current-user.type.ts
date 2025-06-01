@@ -1,12 +1,6 @@
-
-
-export namespace UserRequest {
-	export interface ICurrentUser {
-		sub: string,
-		username: string,
-		iat: number,
-		exp: number,
-	}
-
-
+export interface ICurrentUser {
+	sub: string,
+	username: string,
+	iat: number,
+	exp: number,
 }

@@ -1,12 +1,12 @@
-import { PRODUCTS_ROUTES } from 'consts/Routes'
+import { loadEnvConfig } from 'constants/config'
+import { PRODUCTS_ROUTES } from 'constants/Routes'
 import { randomUUID } from 'crypto'
-import * as dotenv from 'dotenv'
 import { existsSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { extname, join } from 'path'
 
-dotenv.config()
-
+const isProduction = process.env.NODE_ENV === 'production'
+loadEnvConfig(isProduction ? 'production' : 'development')
 
 /**
  * Берем из .env-variables значение для параллельной загрузки,

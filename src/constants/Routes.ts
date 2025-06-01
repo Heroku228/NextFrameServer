@@ -1,6 +1,7 @@
 import { homedir } from 'os'
 import { join } from 'path'
 
+
 /**
  * Путь до API первой версии
  */
@@ -35,4 +36,5 @@ export const USERS_ROUTES = {
 export const AUTH_ROUTES = {
 
 } as const
+
 

@@ -5,13 +5,13 @@ import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { SellerGuard } from 'common/guards/SellerGuards.guard'
 import { uploadFile } from 'common/utils/uploads-images.utils'
-import { FILE_SYSTEM_ROUTES } from 'consts/Routes'
+import { FILE_SYSTEM_ROUTES } from 'constants/Routes'
 import { Response } from 'express'
 import { existsSync } from 'fs'
 import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
 import { ProductsService } from 'microservices/products-microservice/products.service'
-import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { join } from 'path'
+import { ICurrentUser } from 'types/current-user.type'
 
 @UseGuards(AuthGuard('jwt'), SellerGuard)
 @Controller('products')
@@ -37,7 +37,7 @@ export class UpdateProductsDataController {
 	@Patch('hide-product/:productId')
 	async hideProductById(
 		@Param('productId') productId: string,
-		@CurrentUser() user: UserResponseDto,
+		@CurrentUser() user: ICurrentUser,
 		@Res() res: Response
 	) {
 		if (!user) throw new ForbiddenException()
@@ -49,7 +49,7 @@ export class UpdateProductsDataController {
 	@Patch('add-product-image/:productId')
 	@UseInterceptors(FileInterceptor('icon'))
 	async addImageToProduct(
-		@CurrentUser() user: UserResponseDto,
+		@CurrentUser() user: ICurrentUser,
 		@UploadedFile() file: Express.Multer.File,
 		@Param('productId') productId: string
 	) {

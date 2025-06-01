@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Param, Res } from '@nestjs/common'
 import { plainToInstance } from 'class-transformer'
-import { FILE_SYSTEM_ROUTES } from 'consts/Routes'
+import { FILE_SYSTEM_ROUTES } from 'constants/Routes'
 import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
 import { ProductsService } from 'microservices/products-microservice/products.service'
 import { join } from 'path'

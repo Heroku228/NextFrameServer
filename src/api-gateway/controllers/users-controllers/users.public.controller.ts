@@ -6,6 +6,7 @@ import { Response } from 'express'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { catchError, firstValueFrom, Observable, throwError } from 'rxjs'
+import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 
 @Controller('public/users')
@@ -31,7 +32,7 @@ export class PublicUsersController {
 
 	@Get('me')
 	getData(
-		@CurrentUser() user: User,
+		@CurrentUser() user: ICurrentUser,
 		@Res() res: Response
 	) {
 		console.log('USER => ', user)

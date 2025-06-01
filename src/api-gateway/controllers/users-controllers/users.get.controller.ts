@@ -11,6 +11,7 @@ import { UserResponseDto } from 'microservices/users-microservice/entities/dto/u
 import { join } from 'path'
 import { cwd } from 'process'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
+import { ICurrentUser } from 'types/current-user.type'
 
 @Controller('users')
 @UseGuards(CookieUserGuard)
@@ -23,24 +24,19 @@ export class AppUsersController {
 	) { }
 
 	@Get('me')
-	async getCurrentUser(@CurrentUser() user: UserResponseDto) {
-		if (!user)
-			throw new UnauthorizedException()
+	async getCurrentUser(@CurrentUser() user: ICurrentUser) {
+		console.log('User => ', user)
+		if (!user) throw new UnauthorizedException()
+		const userResponse = await firstValueFrom(this.usersService.findByUsername(user.username))
+			.catch(() => new NotFoundException())
 
-		const userResponse = await firstValueFrom(
-			this.usersService.findByUsername(user.username)
-				.pipe(catchError(() => throwError(() => new NotFoundException()))
-				)
-		)
-
-		if (!userResponse)
-			throw new UnauthorizedException()
+		if (!userResponse) throw new UnauthorizedException()
 
 		return plainToInstance(UserResponseDto, userResponse)
 	}
 
 	@Get('user-products')
-	async getUserProducts(@CurrentUser() user: UserResponseDto) {
+	async getUserProducts(@CurrentUser() user: ICurrentUser) {
 		const originalUser = await firstValueFrom(
 			this.usersService.findByUsername(user.username)
 				.pipe(catchError(() => throwError(() => new NotFoundException()))

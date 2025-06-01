@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm'
 import { plainToInstance } from 'class-transformer'
 import { uploadFiles } from 'common/utils/uploads-images.utils'
-import { FILE_SYSTEM_ROUTES, PRODUCTS_ROUTES } from 'consts/Routes'
+import { FILE_SYSTEM_ROUTES, PRODUCTS_ROUTES } from 'constants/Routes'
 import { existsSync } from 'fs'
 import { readdir, rm } from 'fs/promises'
 import { join } from 'path'

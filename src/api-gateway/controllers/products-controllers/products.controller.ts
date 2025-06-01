@@ -12,39 +12,40 @@ import { ResponseProductDto } from 'microservices/products-microservice/dto/resp
 import { ProductsService } from 'microservices/products-microservice/products.service'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { join } from 'path'
+import { ICurrentUser } from 'types/current-user.type'
 
 @UseGuards(AuthGuard('jwt'), SellerGuard)
 @Controller('products')
 export class ProductsController {
 	constructor(private readonly productsService: ProductsService,) { }
 
-	@UseInterceptors(FilesInterceptor('images'))
-	@Post('create-product')
-	async create(
-		@CurrentUser() user: UserResponseDto,
-		@UploadedFiles() images: Express.Multer.File[],
-		@UserDirectory() directory: string,
-		@Body() createProductDto: CreateProductDto
-	) {
-		const product = await this.productsService.createProduct(
-			createProductDto,
-			directory,
-			images,
-			user
-		)
-		console.log(product)
+	// @UseInterceptors(FilesInterceptor('images'))
+	// @Post('create-product')
+	// async create(
+	// 	@CurrentUser() user: ICurrentUser,
+	// 	@UploadedFiles() images: Express.Multer.File[],
+	// 	@UserDirectory() directory: string,
+	// 	@Body() createProductDto: CreateProductDto
+	// ) {
+	// 	const product = await this.productsService.createProduct(
+	// 		createProductDto,
+	// 		directory,
+	// 		images,
+	// 		user
+	// 	)
+	// 	console.log(product)
 
-		return plainToInstance(ResponseProductDto, product)
-	}
+	// 	return plainToInstance(ResponseProductDto, product)
+	// }
 
 	@Get('products-images')
-	async findAllProductsImages(@CurrentUser() user: UserResponseDto) {
+	async findAllProductsImages(@CurrentUser() user: ICurrentUser) {
 		return await this.productsService.findAllProductImages(user.username)
 	}
 
 	@Get('product-image/:filename')
 	async getProductImageByFilename(
-		@CurrentUser() user: UserResponseDto,
+		@CurrentUser() user: ICurrentUser,
 		@Param('filename') filename: string,
 		@Res() res: Response
 	) {

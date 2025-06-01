@@ -14,7 +14,7 @@ import { Response } from 'express'
 import { TransferredFile, UpdateUserData } from 'microservices/users-microservice/entities/dto/update-user.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
-import { UserRequest } from 'types/current-user.type'
+import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 
 type TDuplicateValueErrorResponse = {
@@ -59,7 +59,7 @@ export class PatchUserController {
 	@Patch('update-user-data')
 	@UseInterceptors(JwtCookieInterceptor, FileInterceptor('icon'))
 	async changeUserData(
-		@CurrentUser() user: UserRequest.ICurrentUser,
+		@CurrentUser() user: ICurrentUser,
 		@Body() userData: UpdateUserData,
 		@UploadedFile() file: Express.Multer.File,
 		@Req() req: IRequest
@@ -118,7 +118,7 @@ export class PatchUserController {
 
 	@Patch('become-seller')
 	async becomeSeller(
-		@CurrentUser() user: UserRequest.ICurrentUser,
+		@CurrentUser() user: ICurrentUser,
 		@Res() res: Response
 	) {
 		const { sub } = user

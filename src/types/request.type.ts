@@ -1,10 +1,13 @@
 import { Request } from 'express'
-import { User } from 'microservices/users-microservice/entities/user.entity'
+import { ICurrentUser } from './current-user.type'
 
-
+/**
+ * Рекомендуем к использованию. 
+ * Представляет из себе расширенную версию классичего Request из Express
+ */
 export interface IRequest extends Request {
 	newAccessToken: string,
-	user: User,
+	user: ICurrentUser,
 	isSeller: boolean
 }
 
