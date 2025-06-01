@@ -62,9 +62,15 @@ export class UsersService {
 		}
 	}
 
+	/**
+	 * @returns Выводит всех пользователей, отсортированных по дате создания в порядке убывания
+	 * и исключает заблокированных пользователей.
+	 * Выводит массив объектов UserResponseDto
+	 */
 	async findAll() {
 		return (await this.userRepository
-			.find())
+			.find({ order: { createdAt: 'DESC' } }))
+			.filter(user => !user.isBanned)
 			.map(user => plainToInstance(UserResponseDto, user))
 	}
 
