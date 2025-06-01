@@ -65,12 +65,9 @@ export class AppUsersController {
 	async showDefaultIcon(
 		@Res() res: Response
 	) {
-		const pathToDefaultIcon = pathToDefaultIconOnFS
-		if (!pathToDefaultIcon) {
-			throw new ConflictException()
-		}
+		if (!pathToDefaultIconOnFS) throw new ConflictException()
 
-		res.sendFile(pathToDefaultIcon)
+		res.sendFile(pathToDefaultIconOnFS)
 		return
 	}
 

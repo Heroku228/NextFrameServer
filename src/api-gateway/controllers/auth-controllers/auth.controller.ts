@@ -81,10 +81,6 @@ export class AuthController {
 			? user.pathToUserIcon = await writeUserIcon(user.username, file)
 			: user.pathToUserIcon = USERS_ROUTES.PATH_TO_DEFAULT_ICON
 
-
-		console.log("USER => ", user)
-		console.log('path => ', user.pathToUserIcon)
-
 		try {
 			const { createdUser, token } = await firstValueFrom(this.authService.register(user))
 			req.newAccessToken = token
