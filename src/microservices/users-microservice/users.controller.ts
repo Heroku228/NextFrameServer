@@ -8,14 +8,60 @@ import { UsersService } from './users.service'
 
 @Injectable()
 export class UsersController {
-	constructor(
-		private readonly usersService: UsersService,
-	) { }
+	constructor(private readonly usersService: UsersService) { }
 
 	@MessagePattern('get-user')
 	async getCurrentUser(@Payload() data: { username: string }) {
 		console.log('getCurrentUser payload data -> ', data)
 		return await this.usersService.findByUsername(data.username)
+	}
+
+	@MessagePattern('delete-all-users')
+	async deleteAllUsers() {
+		console.log('delete all users')
+		await this.usersService.clear()
+		return { message: 'All users deleted successfully' }
+	}
+
+	@MessagePattern('ban-user')
+	async banUser(@Payload() username: string) {
+		console.log('ban user username => ', username)
+		const banStatus = await this.usersService.banUser(username)
+		if (!banStatus) throw new NotFoundException('User not found or already banned')
+		return { banStatus }
+	}
+	@MessagePattern('unban-user')
+	async unbanUser(@Payload() username: string) {
+		console.log('unban user username => ', username)
+		const unbanStatus = await this.usersService.unbanUser(username)
+		if (!unbanStatus) throw new NotFoundException('User not found or already unbanned')
+
+		return { unbanStatus }
+	}
+
+	@MessagePattern('delete-user')
+	async deleteUser(@Payload() username: string) {
+		console.log('delete user username => ', username)
+		const deleteStatus = await this.usersService.deleteUser(username)
+		if (!deleteStatus) throw new NotFoundException('User not found or already deleted')
+		return { deleteStatus }
+	}
+	@MessagePattern('update-user-role')
+	async updateUserRole(@Payload() data: { username: string, newRole: string }) {
+		const { username, newRole } = data
+		console.log('update user role username => ', username, ' newRole => ', newRole)
+		const updateStatus = await this.usersService.updateUserRole(username, newRole)
+		if (!updateStatus) throw new NotFoundException('User not found or role already updated')
+		return { updateStatus }
+	}
+
+	// TODO => Сделать проверку на существование пользователя и на то, что пароль не был сброшен ранее, а так же на то, что новый пароль не совпадает со старым + необходимо подтвредить сброс пароля через email
+	@MessagePattern('reset-user-password')
+	async resetUserPassword(@Payload() data: { username: string, newPassword: string }) {
+		const { username, newPassword } = data
+		console.log('reset user password username => ', username, ' newPassword => ', newPassword)
+		const resetStatus = await this.usersService.resetUserPassword(username, newPassword)
+		if (!resetStatus) throw new NotFoundException('User not found or password already reset')
 	}
 
 	@MessagePattern('find-user-products')

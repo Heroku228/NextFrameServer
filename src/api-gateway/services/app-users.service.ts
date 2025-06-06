@@ -14,8 +14,19 @@ export class AppUsersService {
 		private readonly userClient: ClientProxy
 	) { }
 
+	deleteAllUsers(): Observable<string | null> {
+		return this.userClient.send('delete-all-users', {})
+	}	
+
 	findUserProducts(userId: string): Observable<Product[]> {
 		return this.userClient.send('find-user-products', { userId })
+	}
+
+	banUser(username: string): Observable<boolean> {
+		return this.userClient.send('ban-user', { username })
+	}
+	unbanUser(username: string): Observable<boolean> {
+		return this.userClient.send('unban-user', { username })
 	}
 
 	findById(id: string): Observable<UserResponseDto> {
@@ -55,6 +66,10 @@ export class AppUsersService {
 		return this.userClient.send('set-become-seller', username)
 	}
 
+	deleteUser(username: string): Observable<string | null> {
+		return this.userClient.send('delete-user', { username })
+	}
+
 	deleteUserAccountByID(userId: string): Observable<string | null> {
 		return this.userClient.send('delete-user-account-by-id', userId)
 	}
@@ -67,5 +82,12 @@ export class AppUsersService {
 		return this.userClient.send('update-user-data', userData)
 	}
 
+	updateUserRole(username: string, newRole: string): Observable<string[] | null> {
+		return this.userClient.send('update-user-role', { username, newRole })
+	}
+
+	updateUserStatus(username: string, status: string): Observable<string | null> {
+		return this.userClient.send('update-user-status', { username, status })
+	}
 }
 

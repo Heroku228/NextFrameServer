@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
+import { AUTH_ERROR_MESSAGE, ROLE_ERROR_MESSAGE, ROLE_SUCCESS_MESSAGE, USER_ERROR_MESSAGE, USER_SUCCESS_MESSAGE } from 'constants/ErrorMessages'
 import { ROLES, TRoles } from 'constants/Roles'
 import { readdir, rename } from 'fs/promises'
 import { join } from 'path'
@@ -22,7 +23,7 @@ export class UsersService {
 		@Inject('PRODUCTS_SERVICE')
 		private readonly productsClient: ClientProxy,
 	) { }
-
+	
 	async findUserProducts(userId: string) {
 		const products = await lastValueFrom(
 			this.productsClient.send('get-products-by-user', { userId })
@@ -95,7 +96,10 @@ export class UsersService {
 	async changeUserRole(username: string, role: string) {
 		const isValidRole = Object.values(ROLES).includes(role.toLowerCase() as TRoles)
 		if (!isValidRole)
-			throw new BadRequestException(`Invalid role. Allowed roles: ${Object.values(ROLES).join(', ')}`)
+			throw new BadRequestException(`
+				${ROLE_ERROR_MESSAGE.ROLE_NOT_FOUND}.
+				${ROLE_SUCCESS_MESSAGE.ALLOWED_ROLES}: ${Object.values(ROLES).join(', ')}`
+			)
 
 		const user = await this.userRepository.findOne({
 			where: {
@@ -103,7 +107,7 @@ export class UsersService {
 			}
 		})
 
-		if (!user) throw new NotFoundException('User not found')
+		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
 
 		role === 'user'
 			? await this.userRepository.update(user.id, {
@@ -144,7 +148,7 @@ export class UsersService {
 	}
 
 	async deleteUserAccountByID(userId: string) {
-		if (!userId) throw new NotFoundException('Account not found')
+		if (!userId) throw new NotFoundException(AUTH_ERROR_MESSAGE.ACCOUNT_NOT_FOUND)
 		return await this.userRepository.delete(userId)
 	}
 
@@ -155,24 +159,24 @@ export class UsersService {
 			}
 		})
 
-		if (!user) throw new NotFoundException('Account not found')
+		if (!user) throw new NotFoundException(AUTH_ERROR_MESSAGE.CANNOT_DELETE_ADMIN)
 
 		if (user.roles.includes('admin'))
-			throw new ForbiddenException('You cannot delete admin account')
+			throw new ForbiddenException(AUTH_ERROR_MESSAGE.CANNOT_DELETE_ADMIN)
 
 		this.deleteUserAccountByID(user.id)
 	}
+
 	async updateUserData(userData: UpdateUserData) {
-		if (!userData || typeof userData !== 'object') {
-			throw new BadRequestException('Invalid data')
-		}
+		if (!userData || typeof userData !== 'object')
+			throw new BadRequestException(USER_ERROR_MESSAGE.UNCORRECT_DATA_TO_UPDATE)
 
 		const { username, email, password, userId, icon } = userData
 
 		const existingUser = await this.findById(userId)
-		if (!existingUser) {
-			throw new NotFoundException('User not found')
-		}
+
+		if (!existingUser)
+			throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
 
 		const currentUsername = existingUser.username
 		const uploadsDir = join(cwd(), 'uploads')
@@ -195,11 +199,11 @@ export class UsersService {
 		if (icon) {
 			const originalUserDir = join(uploadsDir, currentUsername)
 
-			if (isUsernameChanged) {
+			if (isUsernameChanged)
 				await rename(originalUserDir, userDir).catch(() => {
-					throw new BadRequestException('Failed to rename user directory')
+					throw new BadRequestException(USER_ERROR_MESSAGE.RENAME_DIRECTORY_ERROR)
 				})
-			}
+
 
 			const avatarsDir = join(userDir, 'avatars')
 			const oldAvatarsDir = join(userDir, 'oldAvatars')
@@ -213,16 +217,14 @@ export class UsersService {
 						)
 					)
 				}
-			} catch (e) {
-				// Пропускаем, если каталог отсутствует или пуст
-			}
+			} catch (e) { }
 
 			await writeUserIcon(effectiveUsername, icon)
 			hasIconUpdated = true
 		}
 
 		if (Object.keys(updatePayload).length === 0 && !hasIconUpdated) {
-			throw new BadRequestException('No data provided to update')
+			throw new BadRequestException(USER_ERROR_MESSAGE.NO_UPDATE_DATA)
 		}
 
 		try {
@@ -236,5 +238,68 @@ export class UsersService {
 		} catch (err) {
 			throw new RpcException(err)
 		}
+	}
+
+
+	async unbanUser(username: string) {
+		const user = await this.userRepository.findOne({
+			where: {
+				username
+			}
+		})
+		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+		if (!user.isBanned) throw new BadRequestException(USER_ERROR_MESSAGE.USER_NOT_BANNED)
+
+		user.isBanned = false
+		await this.userRepository.save(user)
+
+		return { unbanStatus: USER_SUCCESS_MESSAGE.USER_UNBANNED }
+	}
+
+	async deleteUser(username: string) {
+		await this.userRepository.delete({ username })
+		return { message: USER_SUCCESS_MESSAGE.USER_DELETED }
+	}
+
+	async updateUserRole(username: string, newRole: string) {
+		const user = await this.userRepository.findOne({ where: { username } })
+
+		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+
+		if (!user.roles.includes(newRole)) {
+			user.roles.push(newRole)
+			await this.userRepository.save(user)
+		}
+
+		return plainToInstance(UserResponseDto, user)
+	}
+
+	async resetUserPassword(username: string, newPassword: string) {
+		const user = await this.userRepository.findOne({ where: { username } })
+
+		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+
+		const hashedUserPassword = await hash(newPassword, 10)
+		user.password = hashedUserPassword
+		await this.userRepository.save(user)
+
+		return { resetStatus: USER_SUCCESS_MESSAGE.PASSWORD_UPDATED }
+	}
+
+
+	async banUser(username: string) {
+		const user = await this.userRepository.findOne({
+			where: {
+				username
+			}
+		})
+
+		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+		if (user.isBanned) throw new BadRequestException(USER_ERROR_MESSAGE.USER_ALREADY_BANNED)
+
+		user.isBanned = true
+		await this.userRepository.save(user)
+
+		return { banStatus: USER_SUCCESS_MESSAGE.USER_BANNED }
 	}
 }

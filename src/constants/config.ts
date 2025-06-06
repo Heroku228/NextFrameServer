@@ -19,7 +19,7 @@ export const ENV_FILES = {
 } as const
 
 /**
- * Загружает основной файл окружения
+ * Загружает основной файл окружения (.env)
  * @returns {void}
  * @see https://docs.nestjs.com/techniques/configuration#environment-variables
  */

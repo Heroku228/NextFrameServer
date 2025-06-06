@@ -45,6 +45,8 @@ type TDuplicateValueErrorResponse = {
 	routine: string,
 }
 
+type TResetUserPassword = { username: string, newPassword: string }
+
 
 @Controller('users')
 @UseGuards(CookieUserGuard)
@@ -55,6 +57,18 @@ export class PatchUserController {
 		@Inject()
 		private readonly authService: AppAuthService
 	) { }
+
+
+	/** @des Контроллер для функции: "Забыл пароль" */
+	@Patch('reset-user-password')
+	async resetUserPassword(@Body() { username, newPassword }: TResetUserPassword) {
+		const resetStatus = await firstValueFrom(this.authService.resetUserPassword(username, newPassword))
+			.catch(err => {
+				throw new Error(`Ошибка при сбросе пароля пользователя: ${err.message}`)
+			})
+
+		return { resetStatus: resetStatus }
+	}
 
 	@Patch('update-user-data')
 	@UseInterceptors(JwtCookieInterceptor, FileInterceptor('icon'))

@@ -17,6 +17,10 @@ export class AppAuthService {
 		return this.authClient.send('register', payload)
 	}
 
+	resetUserPassword(username: string, newPassword: string): Observable<boolean> {
+		return this.authClient.send('reset-user-password', { username, newPassword })
+	}
+
 	validate(username: string, password: string): Observable<TypeObservableValidateData | null> {
 		return this.authClient.send('validate', { username, password })
 	}

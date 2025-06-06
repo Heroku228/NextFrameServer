@@ -1,8 +1,10 @@
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import { loadDefaultEnvConfig } from 'constants/config'
 import * as cookieParser from 'cookie-parser'
 import { initSwagger } from 'swagger/swagger'
 import { AppModule } from './api-gateway/app.module'
+
 
 
 async function bootstrap() {
@@ -14,11 +16,20 @@ async function bootstrap() {
 	})
 
 	const logger = new Logger('MainApp')
+	loadDefaultEnvConfig()
+
+
+	const frontendUrl = process.env.FRONTEND_URL
+
+	if (!frontendUrl) {
+		logger.error('FRONTEND_URL не установлен в переменных окружения')
+		throw new Error('FRONTEND_URL не установлен в переменных окружения')
+	}
 
 	initSwagger(app)
 
 	app.enableCors({
-		origin: 'http://localhost:4200',
+		origin: frontendUrl,
 		credentials: true
 	})
 	app.setGlobalPrefix('api/v1')
@@ -27,7 +38,7 @@ async function bootstrap() {
 		stopAtFirstError: true,
 	}))
 
-	logger.log('Main app is started on 3000 port')
+	logger.log('Приложение запущено на порту: ' + (process.env.PORT ?? 3000))
 	await app.listen(process.env.PORT ?? 3000, '0.0.0.0')
 }
 bootstrap()
