@@ -18,7 +18,6 @@ async function bootstrap() {
 	const logger = new Logger('MainApp')
 	loadDefaultEnvConfig()
 
-
 	const frontendUrl = process.env.FRONTEND_URL
 
 	if (!frontendUrl) {

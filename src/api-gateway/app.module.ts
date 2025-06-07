@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtModule } from '@nestjs/jwt'
 import { AuthMiddleware } from '../common/middleware/global-auth.middleware'
+import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './controllers/auth-controllers/auth.module'
 import { UsersModule } from './controllers/users-controllers/users.module'
 
@@ -10,6 +11,7 @@ import { UsersModule } from './controllers/users-controllers/users.module'
 		ConfigModule.forRoot({ isGlobal: true }),
 		UsersModule,
 		AuthModule,
+		AdminModule,
 		JwtModule.registerAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],

@@ -1,19 +1,19 @@
-import { BadRequestException, Body, ConflictException, Controller, Logger, NotFoundException, Post, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { Body, ConflictException, Controller, Logger, NotFoundException, Post, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
 import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
+import { PreventAuthorizedGuard } from 'common/guards/PreventAuthorizedGuard.guard'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
-import { PreventAuthorizedInterceptor } from 'common/interceptors/PreventAuthorizedInterceptor'
 import { FileRequiredPipe } from 'common/pipe/file-required.pipe'
 import { LoginPipe } from 'common/pipe/login.pipe'
 import { RegisterPipe } from 'common/pipe/register.pipe'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { API_STATUS, ApiResponse as IApiResponse } from 'constants/ApiResponse'
-import { pathToDefaultIconWEB } from 'constants/common'
 import { HTTP_STATUS_CODES } from 'constants/Http-status'
+import { USERS_ROUTES } from 'constants/Routes'
 import { Request, Response } from 'express'
 import { CreateUserDto } from 'microservices/users-microservice/entities/dto/create-user.dto'
 import { UserCredentials } from 'microservices/users-microservice/entities/dto/user-credentials.dto'
@@ -24,7 +24,6 @@ import { catchError, firstValueFrom, throwError } from 'rxjs'
 import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 import { REGISTER_API_OPERATION } from './auth.swagger'
-import { USERS_ROUTES } from 'constants/Routes'
 
 type TRegistrationFailedResponse = {
 	response: {
@@ -48,7 +47,8 @@ type TRegistrationFailedResponse = {
 }
 
 @Controller('auth')
-@UseInterceptors(PreventAuthorizedInterceptor, JwtCookieInterceptor)
+@UseInterceptors(JwtCookieInterceptor)
+@UseGuards(PreventAuthorizedGuard)
 @ApiTags('auth')
 export class AuthController {
 	constructor(private readonly authService: AppAuthService) { }
@@ -111,9 +111,6 @@ export class AuthController {
 		@CurrentUser() user: ICurrentUser,
 		@Req() req: IRequest,
 	) {
-		if (user)
-			throw new BadRequestException('Пользователь уже авторизован')
-
 		const { username, password } = credentials
 
 		const result = await firstValueFrom(

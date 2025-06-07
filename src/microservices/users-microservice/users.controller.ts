@@ -94,10 +94,12 @@ export class UsersController {
 	@MessagePattern('find-by-username')
 	async findByUsername(@Payload() username: string) {
 		console.log('find by username data => ', username)
-		const user = await this.usersService.findByUsername(username)
-		if (!user) throw new NotFoundException('User not found')
-		console.log('find by username user => ', user)
-		return user
+
+		try {
+			return await this.usersService.findByUsername(username)
+		} catch (err) {
+			throw new NotFoundException('[ERROR] ', err.message)
+		}
 	}
 
 	@MessagePattern('find-by-email')

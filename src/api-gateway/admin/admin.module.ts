@@ -1,18 +1,17 @@
-import { Module, NestMiddleware } from '@nestjs/common'
-import { NextFunction, Response } from 'express'
-import { IRequest } from 'types/request.type'
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { ClientsModule } from 'api-gateway/clients/clients.module'
+import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { AdminController } from './admin.controller'
 
 
 @Module({
-	imports: [],
+	imports: [
+		ConfigModule.forRoot({ isGlobal: true }),
+		ClientsModule,
+	],
 	controllers: [AdminController],
-	providers: [],
+	providers: [AppUsersService],
 })
-export class AdminModule implements NestMiddleware {
-	use(req: IRequest, res: Response, next: NextFunction) {
-		console.log('AdminModule middleware called')
-		console.log('req => ', req)
-		// if (req.user?.role !== 'admin') {}
-	}
-}
+
+export class AdminModule { }

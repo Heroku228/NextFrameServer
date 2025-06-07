@@ -3,7 +3,8 @@ import { tap } from 'rxjs'
 import { IRequest } from 'types/request.type'
 
 /**
- * Блокируем доступ к ресурсу, если пользователь уже авторизован
+ * Блокируем доступ к ресурсу, если пользователь уже авторизован.
+ * ПРОВЕРКА ИДЕТ ИСКЛЮЧИТЕЛЬНО ПО JWT-ТОКЕНУ В КУКАХ 
  */
 @Injectable()
 export class PreventAuthorizedInterceptor implements NestInterceptor {

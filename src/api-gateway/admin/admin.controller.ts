@@ -1,9 +1,7 @@
-import { Body, Controller, Delete, Param, Patch, Post, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
-import { Roles } from 'common/decorators/Roles.decorator'
-import { JwtAuthGuard } from 'common/guards/JwtAuthGuard.guard'
-import { RolesGuard } from 'common/guards/RolesGuard.guard'
 import { firstValueFrom } from 'rxjs'
+import { IRequest } from 'types/request.type'
 
 /**
  * Админский контроллер для управления административными функциями.
@@ -11,23 +9,37 @@ import { firstValueFrom } from 'rxjs'
  */
 
 @Controller('admin')
-@UseInterceptors()
-@Roles('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+// @Roles('admin')
+// @UseGuards(JwtAuthGuard, RolesGuard)
 export class AdminController {
 	constructor(private readonly usersService: AppUsersService) { }
 
+
+	@Get('test')
+	async test(
+		@Req() req: IRequest
+	) {
+		for (const cookie of req.cookies.entries()) {
+			console.log(cookie)
+		}
+		return { message: 'Admin controller is working!' }
+	}
+
 	// TEMPARILY METHOD
-	async deleteAllUsers() {
+	@Delete('delete-all-users')
+	async deleteAllUsers(
+
+	) {
+		console.log('delete all users')
 		const deleteStatus = await firstValueFrom(this.usersService.deleteAllUsers())
 			.catch(err => {
 				throw new Error(`Ошибка при удалении всех пользователей: ${err.message}`)
-			})	
+			})
+
 		return { deleteStatus: deleteStatus }
-	}d
+	}
 
 	/**
-	 * 
 	 * @param username - имя пользователя, которого нужно заблокировать.
 	 * @des Блокирует пользователя по его логину.
 	 * Этот метод позволяет администратору заблокировать пользователя, что может быть полезно в случае нарушения правил сообщества.

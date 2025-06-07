@@ -23,7 +23,7 @@ export class UsersService {
 		@Inject('PRODUCTS_SERVICE')
 		private readonly productsClient: ClientProxy,
 	) { }
-	
+
 	async findUserProducts(userId: string) {
 		const products = await lastValueFrom(
 			this.productsClient.send('get-products-by-user', { userId })
@@ -82,7 +82,9 @@ export class UsersService {
 					username: username
 				}
 			})
+			.catch(() => new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND))
 	}
+
 
 	async findByEmail(email: string) {
 		return await this.userRepository
@@ -91,6 +93,7 @@ export class UsersService {
 					email: email
 				}
 			})
+			.catch(() => new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND))
 	}
 
 	async changeUserRole(username: string, role: string) {

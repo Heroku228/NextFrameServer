@@ -7,6 +7,9 @@ import { UserResponseDto } from 'microservices/users-microservice/entities/dto/u
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { Observable } from 'rxjs'
 
+/**
+ * Функционал для отправки запросов к UsersMicroservice
+ */
 @Injectable()
 export class AppUsersService {
 	constructor(
