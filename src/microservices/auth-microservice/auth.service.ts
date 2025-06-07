@@ -3,8 +3,9 @@ import { JwtService } from '@nestjs/jwt'
 import { ClientProxy } from '@nestjs/microservices'
 import { compare, hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
+import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { ROLES } from 'constants/Roles'
-import { catchError, firstValueFrom, throwError } from 'rxjs'
+import { firstValueFrom } from 'rxjs'
 import { CreateUserDto } from '../users-microservice/entities/dto/create-user.dto'
 import { UserResponseDto } from '../users-microservice/entities/dto/user-response.dto'
 import { User } from '../users-microservice/entities/user.entity'
@@ -21,9 +22,8 @@ export class AuthService {
 	async validate(username: string, password: string) {
 		const user: User = await firstValueFrom(
 			this.usersClient.send('find-by-username', username)
-				.pipe(catchError(() => throwError(() => new NotFoundException('User not found')))
-				))
-
+		)
+		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
 
 		if (user && await compare(password, user.password)) {
 			const responseUser = plainToInstance(UserResponseDto, user)

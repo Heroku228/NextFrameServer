@@ -14,13 +14,11 @@ export class JwtCookieInterceptor implements NestInterceptor {
 		const response: Response = context.switchToHttp().getResponse()
 		const request: IRequest = context.switchToHttp().getRequest()
 
-		console.log(request.cookies)
-
 		return next.handle().pipe(
 			tap(() => {
 				if (request.newAccessToken) {
 					setProtectedCookie(response, 'jwt', request.newAccessToken)
-					setDefaultCookie(response, 'isSeller', request.isSeller)
+					setDefaultCookie(response, 'isSeller', request.isSeller || false)
 				}
 			})
 		)

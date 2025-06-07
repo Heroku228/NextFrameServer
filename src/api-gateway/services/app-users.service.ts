@@ -6,6 +6,7 @@ import { UpdateUserData } from 'microservices/users-microservice/entities/dto/up
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { Observable } from 'rxjs'
+import { TBanUserData } from 'types/user-data.type'
 
 /**
  * Функционал для отправки запросов к UsersMicroservice
@@ -19,17 +20,18 @@ export class AppUsersService {
 
 	deleteAllUsers(): Observable<string | null> {
 		return this.userClient.send('delete-all-users', {})
-	}	
+	}
 
 	findUserProducts(userId: string): Observable<Product[]> {
 		return this.userClient.send('find-user-products', { userId })
 	}
 
-	banUser(username: string): Observable<boolean> {
-		return this.userClient.send('ban-user', { username })
+	banUser(userData: TBanUserData): Observable<string> {
+		console.log('ban user userdata => ', userData)
+		return this.userClient.send('ban-user', userData)
 	}
 	unbanUser(username: string): Observable<boolean> {
-		return this.userClient.send('unban-user', { username })
+		return this.userClient.send('unban-user', username)
 	}
 
 	findById(id: string): Observable<UserResponseDto> {

@@ -11,6 +11,7 @@ import { join } from 'path'
 import { cwd } from 'process'
 import { lastValueFrom } from 'rxjs'
 import { Repository } from 'typeorm'
+import { TBanUserData } from 'types/user-data.type'
 import { UpdateUserData } from './entities/dto/update-user.dto'
 import { UserResponseDto } from './entities/dto/user-response.dto'
 import { User } from './entities/user.entity'
@@ -254,6 +255,8 @@ export class UsersService {
 		if (!user.isBanned) throw new BadRequestException(USER_ERROR_MESSAGE.USER_NOT_BANNED)
 
 		user.isBanned = false
+		user.banReason = ''
+		user.banDuration = null
 		await this.userRepository.save(user)
 
 		return { unbanStatus: USER_SUCCESS_MESSAGE.USER_UNBANNED }
@@ -290,19 +293,32 @@ export class UsersService {
 	}
 
 
-	async banUser(username: string) {
+	async banUser(userData: TBanUserData) {
+		const { username, duration, reason } = userData
+
 		const user = await this.userRepository.findOne({
 			where: {
 				username
 			}
 		})
 
-		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
-		if (user.isBanned) throw new BadRequestException(USER_ERROR_MESSAGE.USER_ALREADY_BANNED)
+		console.log('USER => ', user)
+		if (!user)
+			throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+
+		if (user.isBanned) return USER_ERROR_MESSAGE.USER_ALREADY_BANNED
 
 		user.isBanned = true
+		user.banReason = reason
+
+		const banUntil = new Date(Date.now() + duration)
+
+		if (isNaN(banUntil.getTime()))
+			user.banDuration = new Date(Date.now() + 10 * 1000)
+		else user.banDuration = banUntil
+
 		await this.userRepository.save(user)
 
-		return { banStatus: USER_SUCCESS_MESSAGE.USER_BANNED }
+		return USER_SUCCESS_MESSAGE.USER_BANNED
 	}
 }

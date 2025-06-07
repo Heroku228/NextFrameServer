@@ -17,7 +17,6 @@ type TFileRequets = {
 export class FileRequiredPipe implements PipeTransform {
 	transform(value: TFileRequets) {
 		const threeMB = 3 * 1024 * 1024 // 3 MB
-		console.log('valiue => ', value)
 
 		if (!value) return null
 

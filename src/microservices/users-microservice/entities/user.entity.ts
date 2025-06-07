@@ -32,6 +32,12 @@ export class User {
 	@Column()
 	password: string
 
+	@Column({ default: '', nullable: true })
+	banReason: string
+
+	@Column({ type: 'timestamp', nullable: true })
+	banDuration: Date | null
+
 	@CreateDateColumn()
 	createdAt: Date
 

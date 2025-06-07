@@ -12,6 +12,15 @@ export const USER_ERROR_MESSAGE = {
 	RENAME_DIRECTORY_ERROR: 'Ошибка при переименовании директории пользователя',
 	NO_UPDATE_DATA: 'Нет данных для обновления пользователя',
 	USER_ALREADY_BANNED: 'Пользователь уже заблокирован',
+	USER_NOT_FOUND_OR_ALREADY_BANNED: 'Пользователь не найден - либо уже был заблокирован',
+	USER_NOT_FOUND_OR_ALREADY_UNBANNED: 'Пользователь не найден - либо не является заблокированным',
+	CANNOT_CHANGE_USER_ROLE: 'Не удалось изменеить роль пользователя',
+	CANNOT_CHANGE_USER_PASSWORD: 'Не удалось изменить пароль пользователя',
+	CANNOT_CHANGE_USER_DATA: 'Не удалось изменить данные пользователя',
+	NO_USER_DATA: 'Данные пользователя отсутствуют',
+	INVALID_BAN_DATA: 'Не получены все необходимые данные для блокировки пользователя',
+	INVALID_BAN_DURATION: 'Неправильно установлено время блокировки пользователя'
+
 } as const
 
 export const USER_SUCCESS_MESSAGE = {
@@ -38,7 +47,7 @@ export const ROLE_SUCCESS_MESSAGE = {
 	ROLE_UPDATED: 'Роль успешно обновлена',
 	ROLE_DELETED: 'Роль успешно удалена',
 	ALLOWED_ROLES: 'Разрешенные роли',
-} as const	
+} as const
 
 export const AUTH_ERROR_MESSAGE = {
 	ACCOUNT_NOT_ACTIVATED: 'Аккаунт не активирован',

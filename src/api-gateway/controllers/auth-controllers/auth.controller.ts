@@ -4,7 +4,6 @@ import { ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiOperation, ApiTag
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
 import { simplifyDuplicateKeyMessage } from 'api-gateway/services/app-global.service'
 import { plainToInstance } from 'class-transformer'
-import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { PreventAuthorizedGuard } from 'common/guards/PreventAuthorizedGuard.guard'
 import { JwtCookieInterceptor } from 'common/interceptors/JwtCookieInterceptor.interceptor'
 import { FileRequiredPipe } from 'common/pipe/file-required.pipe'
@@ -12,6 +11,7 @@ import { LoginPipe } from 'common/pipe/login.pipe'
 import { RegisterPipe } from 'common/pipe/register.pipe'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { API_STATUS, ApiResponse as IApiResponse } from 'constants/ApiResponse'
+import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { HTTP_STATUS_CODES } from 'constants/Http-status'
 import { USERS_ROUTES } from 'constants/Routes'
 import { Request, Response } from 'express'
@@ -21,7 +21,6 @@ import { UserResponseDto } from 'microservices/users-microservice/entities/dto/u
 import { User } from 'microservices/users-microservice/entities/user.entity'
 import { randomUUID } from 'node:crypto'
 import { catchError, firstValueFrom, throwError } from 'rxjs'
-import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 import { REGISTER_API_OPERATION } from './auth.swagger'
 
@@ -108,21 +107,18 @@ export class AuthController {
 	@Post('login')
 	async login(
 		@Body(LoginPipe) credentials: UserCredentials,
-		@CurrentUser() user: ICurrentUser,
 		@Req() req: IRequest,
 	) {
 		const { username, password } = credentials
 
 		const result = await firstValueFrom(
 			this.authService.validate(username, password)
-				.pipe(catchError(() => throwError(() => new NotFoundException('User not found')))
+				.pipe(catchError(() => throwError(() => new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)))
 				)
 		)
 
-		if (!result) throw new NotFoundException('User not found')
-
+		if (!result) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
 		if ('status' in result) throw new UnauthorizedException(result)
-
 
 		const { responseUser, accessToken } = result
 
@@ -136,27 +132,5 @@ export class AuthController {
 		}
 
 		return response
-	}
-
-	@Post('logout')
-	async logout(
-		@Res({ passthrough: true }) res: Response,
-		@Req() req: Request
-	) {
-		if (!req.cookies['jwt']) {
-			res
-				.status(HTTP_STATUS_CODES.UNAUTHORIZED)
-				.json({ message: 'No active session' })
-			return
-		}
-
-		res.clearCookie('jwt')
-
-		res
-			.status(200)
-			.json({
-				status: HTTP_STATUS_CODES.OK,
-				message: 'Successful logout from account'
-			})
-	}
+	}	
 }

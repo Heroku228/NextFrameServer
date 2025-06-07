@@ -1,7 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Req, UseInterceptors } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
+import { ClearCookiesInterceptor } from 'common/interceptors/ClearCookies.interceptor'
+import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { firstValueFrom } from 'rxjs'
 import { IRequest } from 'types/request.type'
+import { TBanUserData } from 'types/user-data.type'
+
 
 /**
  * Админский контроллер для управления административными функциями.
@@ -27,10 +31,8 @@ export class AdminController {
 
 	// TEMPARILY METHOD
 	@Delete('delete-all-users')
-	async deleteAllUsers(
-
-	) {
-		console.log('delete all users')
+	@UseInterceptors(ClearCookiesInterceptor)
+	async deleteAllUsers() {
 		const deleteStatus = await firstValueFrom(this.usersService.deleteAllUsers())
 			.catch(err => {
 				throw new Error(`Ошибка при удалении всех пользователей: ${err.message}`)
@@ -46,14 +48,27 @@ export class AdminController {
 	 * @param username - имя пользователя, которого нужно заблокировать.
 	 * @returns 
 	 */
-	@Post('ban-user')
-	async banUser(@Param('username') username: string) {
-		const banStatus = await firstValueFrom(this.usersService.banUser(username))
-			.catch(err => {
-				throw new Error(`Ошибка при блокировке пользователя: ${err.message}`)
-			})
+	@Patch('ban-user')
+	async banUser(@Body() userData: TBanUserData) {
+		const { username, reason, duration } = userData
 
-		return { banStatus: banStatus }
+		if (!username || !reason || !duration)
+			throw new BadRequestException(USER_ERROR_MESSAGE.INVALID_BAN_DATA)
+
+		const durationNumber = Number(duration)
+
+		if (isNaN(durationNumber) || durationNumber <= 0)
+			throw new BadRequestException(USER_ERROR_MESSAGE.INVALID_BAN_DURATION)
+
+		console.log('test')
+		const response = await firstValueFrom(this.usersService.banUser({
+			username,
+			reason,
+			duration: durationNumber
+		}))
+			.catch(err => { throw new BadRequestException(err) })
+		console.log('response => ', response)
+		return { response }
 	}
 
 	/**
@@ -61,8 +76,10 @@ export class AdminController {
 	 * @param username - имя пользователя, которого нужно разблокировать.
 	 * @returns статус разблокировки пользователя.
 	 */
-	@Post('unban-user')
-	async unbanUser(@Param('username') username: string) {
+	@Patch('unban-user')
+	async unbanUser(@Body() userData: { username: string }) {
+		const { username } = userData
+		console.log('unban user username => ', username)
 		const banStatus = await firstValueFrom(this.usersService.unbanUser(username))
 			.catch(err => {
 				throw new Error(`Ошибка при разблокировки пользователя: ${err.message}`)

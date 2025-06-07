@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
 import { plainToInstance } from 'class-transformer'
+import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
+import { TBanUserData } from 'types/user-data.type'
 import { UpdateUserData } from './entities/dto/update-user.dto'
 import { UserResponseDto } from './entities/dto/user-response.dto'
 import { User } from './entities/user.entity'
@@ -24,34 +26,50 @@ export class UsersController {
 	}
 
 	@MessagePattern('ban-user')
-	async banUser(@Payload() username: string) {
-		console.log('ban user username => ', username)
-		const banStatus = await this.usersService.banUser(username)
-		if (!banStatus) throw new NotFoundException('User not found or already banned')
-		return { banStatus }
+	async banUser(@Payload() userData: TBanUserData) {
+		try {
+			console.log('ban user try')
+			return await this.usersService.banUser(userData)
+		} catch (err) {
+			console.log('ban user catch')
+			if (err instanceof NotFoundException) {
+				const error: any = err
+				return error.response || USER_ERROR_MESSAGE.USER_NOT_FOUND
+			}
+		}
 	}
+
 	@MessagePattern('unban-user')
 	async unbanUser(@Payload() username: string) {
 		console.log('unban user username => ', username)
 		const unbanStatus = await this.usersService.unbanUser(username)
-		if (!unbanStatus) throw new NotFoundException('User not found or already unbanned')
 
-		return { unbanStatus }
+		console.log('unban status => ', unbanStatus)
+		if (!unbanStatus)
+			return USER_ERROR_MESSAGE.USER_NOT_FOUND_OR_ALREADY_UNBANNED
+
+		return unbanStatus
 	}
 
 	@MessagePattern('delete-user')
 	async deleteUser(@Payload() username: string) {
 		console.log('delete user username => ', username)
 		const deleteStatus = await this.usersService.deleteUser(username)
-		if (!deleteStatus) throw new NotFoundException('User not found or already deleted')
+			.catch(err => {
+				console.error('[ERROR] (delete-user) ', err)
+				throw new BadRequestException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+			})
 		return { deleteStatus }
 	}
+
 	@MessagePattern('update-user-role')
 	async updateUserRole(@Payload() data: { username: string, newRole: string }) {
 		const { username, newRole } = data
-		console.log('update user role username => ', username, ' newRole => ', newRole)
 		const updateStatus = await this.usersService.updateUserRole(username, newRole)
-		if (!updateStatus) throw new NotFoundException('User not found or role already updated')
+			.catch(err => {
+				console.error('[ERROR] (update-user-role) ', err)
+				throw new BadRequestException(USER_ERROR_MESSAGE.CANNOT_CHANGE_USER_ROLE)
+			})
 		return { updateStatus }
 	}
 
@@ -61,7 +79,10 @@ export class UsersController {
 		const { username, newPassword } = data
 		console.log('reset user password username => ', username, ' newPassword => ', newPassword)
 		const resetStatus = await this.usersService.resetUserPassword(username, newPassword)
-		if (!resetStatus) throw new NotFoundException('User not found or password already reset')
+			.catch(err => {
+				console.error('[ERROR] (reset-user-password) ', err)
+				throw new BadRequestException(USER_ERROR_MESSAGE.CANNOT_CHANGE_USER_PASSWORD)
+			})
 	}
 
 	@MessagePattern('find-user-products')

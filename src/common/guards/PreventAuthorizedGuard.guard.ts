@@ -16,6 +16,8 @@ export class PreventAuthorizedGuard implements CanActivate {
 
 	async canActivate(context: ExecutionContext) {
 		const req: IRequest = context.switchToHttp().getRequest()
+		if (!req.user) return true
+
 		const { username } = req.user
 		const currentUser = await firstValueFrom(this.usersService.findByUsername(username))
 

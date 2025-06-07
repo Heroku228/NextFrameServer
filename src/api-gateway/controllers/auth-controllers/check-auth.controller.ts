@@ -29,10 +29,7 @@ export class CheckAuthController {
 	@ApiOkResponse(apiOkResponse)
 	@Get('check-auth')
 	async checkAuth(@CurrentUser() user: ICurrentUser): Promise<TAuthenticatedStatus> {
-		this.logger.debug('Received request to check authentication status')
 		if (!user) return { isAuthenticated: false }
-
-		this.logger.debug('Checking authentication status for user:', user)
 
 		const { username } = user
 
