@@ -1,20 +1,19 @@
-import { Controller, Get, Inject, NotFoundException, Query, Req, Res } from '@nestjs/common'
-import { ClientProxy } from '@nestjs/microservices'
+import { BadRequestException, Controller, Get, Inject, Logger, NotFoundException, Query, Req, Res } from '@nestjs/common'
+import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
+import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { Response } from 'express'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
-import { User } from 'microservices/users-microservice/entities/user.entity'
-import { catchError, firstValueFrom, Observable, throwError } from 'rxjs'
+import { firstValueFrom } from 'rxjs'
 import { ICurrentUser } from 'types/current-user.type'
 import { IRequest } from 'types/request.type'
 
 @Controller('public/users')
 export class PublicUsersController {
-	constructor(
-		@Inject('USERS_SERVICE')
-		private readonly usersClient: ClientProxy
-	) { }
+	constructor(@Inject() private readonly usersService: AppUsersService) { }
+
+	private logger = new Logger(PublicUsersController.name)
 
 	@Get('all-cookies')
 	getAllCookies(@Req() req: IRequest) {
@@ -42,23 +41,29 @@ export class PublicUsersController {
 
 	@Get()
 	async getUser(@Query('username') username: string) {
-		console.log('get user controller')
+		this.logger.log('get user controller')
 
-		const observableUser: Observable<User> = this.usersClient.send('find-by-username', username)
-			.pipe(
-				catchError(
-					() =>
-						throwError(() =>
-							new NotFoundException('User not found'))
-				)
-			)
+		const user = await firstValueFrom(this.usersService.findByUsername(username))
 
-		const user = await firstValueFrom(observableUser)
+		if (!user)
+			throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+
 		return plainToInstance(UserResponseDto, user)
 	}
 
 	@Get('all-users')
 	async showAllUsers() {
-		return this.usersClient.send('find-all', {})
+		const users = await firstValueFrom(this.usersService.findAll())
+			.catch(err => {
+				this.logger.error(err)
+				throw new BadRequestException(USER_ERROR_MESSAGE.USERS_NOT_FOUND)
+			})
+
+		if (!users || users.length < 1)
+			return { message: USER_ERROR_MESSAGE.USERS_NOT_FOUND }
+
+		this.logger.log('USERS => ', users)
+
+		return users
 	}
 }

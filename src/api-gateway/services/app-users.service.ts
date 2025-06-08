@@ -47,8 +47,8 @@ export class AppUsersService {
 		return this.userClient.send('create-user', { createUserDto })
 	}
 
-	findAll() {
-		return this.userClient.send('find-all-user', {})
+	findAll(): Observable<UserResponseDto[] | null> {
+		return this.userClient.send('find-all', {})
 	}
 
 	findByUsername(username: string): Observable<User | null> {

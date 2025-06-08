@@ -1,30 +1,24 @@
-import { ConflictException, Controller, Get, Inject, NotFoundException, Param, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { ConflictException, Controller, Get, Inject, Logger, NotFoundException, Param, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { plainToInstance } from 'class-transformer'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
-import { UserDirectory } from 'common/decorators/user-directory.decorator'
 import { CookieUserGuard } from 'common/guards/cookie-user.guard'
-import { pathToDefaultIconOnFS } from 'constants/common'
+import { pathToCurrentUserIcon, pathToDefaultIconOnFS } from 'constants/common'
 import { ROLES } from 'constants/Roles'
 import { Response } from 'express'
-import { readdir } from 'fs/promises'
-import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
+import { readdir, readFile } from 'fs/promises'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
 import { join } from 'path'
 import { cwd } from 'process'
-import { catchError, firstValueFrom, throwError } from 'rxjs'
+import { firstValueFrom } from 'rxjs'
 import { ICurrentUser } from 'types/current-user.type'
 
 @Controller('users')
-@UseGuards(CookieUserGuard)
 export class AppUsersController {
-	constructor(
-		@Inject()
-		private readonly appUsersService: AppUsersService,
-		@Inject()
-		private readonly usersService: AppUsersService
-	) { }
+	constructor(@Inject() private readonly usersService: AppUsersService) { }
+	private logger = new Logger(AppUsersController.name)
 
+	@UseGuards(CookieUserGuard)
 	@Get('me')
 	async getCurrentUser(@CurrentUser() user: ICurrentUser) {
 		if (!user) throw new UnauthorizedException()
@@ -36,34 +30,10 @@ export class AppUsersController {
 		return plainToInstance(UserResponseDto, userResponse)
 	}
 
+	@UseGuards(CookieUserGuard)
 	@Get('check-by-admin-role')
 	async checkByAdminRole(@CurrentUser() user: ICurrentUser) {
 		return { isAdmin: user.roles.some(role => role === ROLES.admin) }
-	}
-
-	@Get('user-products')
-	async getUserProducts(@CurrentUser() user: ICurrentUser) {
-		const originalUser = await firstValueFrom(
-			this.usersService.findByUsername(user.username)
-				.pipe(catchError(() => throwError(() => new NotFoundException()))
-				)
-		)
-
-		if (!originalUser) {
-			throw new NotFoundException('User not found')
-		}
-
-		const userProducts = await firstValueFrom(
-			this.appUsersService.findUserProducts(originalUser.id)
-				.pipe(catchError(() => throwError(() => new NotFoundException('User products not found ')))
-				)
-		)
-
-		console.log('user products -> ', userProducts)
-
-		return userProducts
-			.filter(product => !product.isHidden)
-			.map(product => plainToInstance(ResponseProductDto, product))
 	}
 
 	@Get('default-icon')
@@ -79,23 +49,26 @@ export class AppUsersController {
 	@Get('user-icon/:username')
 	async showIconForAnotherUser(
 		@Param('username') username: string,
-		@Res() res: Response,
-		@UserDirectory() dir: string
-	) {
-		try {
-			if (!username) {
-				const pathToCurrentUserAvatar = await this.showCurrentUserAvatar(dir)
-				res.sendFile(pathToCurrentUserAvatar)
-				return
-			}
+		@Res() res: Response) {
 
-			const pathToAvatarsDir = join(cwd(), 'uploads', username, 'avatars')
-			const userAvatar = (await readdir(pathToAvatarsDir))[0]
-			const pathToUserAvatar = join(pathToAvatarsDir, userAvatar)
-			return res.sendFile(pathToUserAvatar)
-		} catch (err) {
-			throw new NotFoundException('Avatar not found')
+		const dir = pathToCurrentUserIcon(username)
+
+		this.logger.log(`DIR => ${dir}`)
+
+		const pathToAvatarsDir = join(cwd(), 'uploads', username, 'avatars')
+		this.logger.log('pathToAvatarsDir => ', pathToAvatarsDir)
+		const userAvatar = (await readdir(pathToAvatarsDir))[0]
+		this.logger.log('user avatar => ', userAvatar)
+		const pathToUserAvatar = join(pathToAvatarsDir, userAvatar)
+
+		const fileData = await readFile(pathToUserAvatar)
+		if (!fileData) {
+			res.sendFile(pathToDefaultIconOnFS)
+			return
 		}
+
+		res.sendFile(pathToUserAvatar)
+		return
 	}
 
 

@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Logger, NotFoundException, Post, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Body, ConflictException, Controller, Logger, NotFoundException, Post, Req, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AppAuthService } from 'api-gateway/services/app-auth.service'
@@ -14,7 +14,6 @@ import { API_STATUS, ApiResponse as IApiResponse } from 'constants/ApiResponse'
 import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { HTTP_STATUS_CODES } from 'constants/Http-status'
 import { USERS_ROUTES } from 'constants/Routes'
-import { Request, Response } from 'express'
 import { CreateUserDto } from 'microservices/users-microservice/entities/dto/create-user.dto'
 import { UserCredentials } from 'microservices/users-microservice/entities/dto/user-credentials.dto'
 import { UserResponseDto } from 'microservices/users-microservice/entities/dto/user-response.dto'
@@ -86,13 +85,17 @@ export class AuthController {
 
 			if (!createdUser) throw new UnauthorizedException()
 
-			return {
+			const response = {
 				createdUser: plainToInstance(UserResponseDto, createdUser),
 				icon: {
 					filename: file ? file.originalname : user.username + randomUUID().toString().slice(0, 10),
 					pathToUserIcon: user.pathToUserIcon
 				}
 			}
+
+			this.logger.log('register response => ', response)
+
+			return response
 		} catch (err) {
 			const error = err as TRegistrationFailedResponse
 
@@ -132,5 +135,5 @@ export class AuthController {
 		}
 
 		return response
-	}	
+	}
 }

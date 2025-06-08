@@ -1,5 +1,6 @@
 export const USER_ERROR_MESSAGE = {
 	USER_NOT_FOUND: 'Пользователь не найден',
+	USERS_NOT_FOUND: 'Пользователи не найдены',
 	USER_ALREADY_EXISTS: 'Пользователь с таким логином или Email уже существует',
 	USER_BANNED: 'Пользователь заблокирован',
 	USER_NOT_BANNED: 'Пользователь не заблокирован',
