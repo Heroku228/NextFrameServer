@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Req, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Req, UseInterceptors } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
 import { ClearCookiesInterceptor } from 'common/interceptors/ClearCookies.interceptor'
 import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
@@ -18,6 +18,7 @@ import { TBanUserData } from 'types/user-data.type'
 export class AdminController {
 	constructor(private readonly usersService: AppUsersService) { }
 
+	private logger = new Logger(AdminController.name)
 
 	@Get('test')
 	async test(
@@ -79,13 +80,12 @@ export class AdminController {
 	@Patch('unban-user')
 	async unbanUser(@Body() userData: { username: string }) {
 		const { username } = userData
-		console.log('unban user username => ', username)
-		const banStatus = await firstValueFrom(this.usersService.unbanUser(username))
-			.catch(err => {
-				throw new Error(`Ошибка при разблокировки пользователя: ${err.message}`)
-			})
-
-		return { banStatus: banStatus }
+		try {
+			return await firstValueFrom(this.usersService.unbanUser(username))
+		} catch (err) {
+			this.logger.error(`[ERROR] ${USER_ERROR_MESSAGE.UNBAN_USER_ERROR} `, err)
+			throw new BadRequestException(USER_ERROR_MESSAGE.UNBAN_USER_ERROR)
+		}
 	}
 
 	/**
@@ -93,14 +93,15 @@ export class AdminController {
 	 * @param username - имя пользователя, которого нужно удалить.
 	 * @returns статус удаления пользователя.
 	 */
-	@Delete('delete-user')
+	@Delete('delete-user/:username')
 	async deleteUser(@Param('username') username: string) {
-		const deleteStatus = await firstValueFrom(this.usersService.deleteUser(username))
+		this.logger.log(' delete user username => ', username)
+		console.log('log username => ', username)
+
+		return await firstValueFrom(this.usersService.deleteUser(username))
 			.catch(err => {
 				throw new Error(`Ошибка при удалении пользователя: ${err.message}`)
 			})
-
-		return { deleteStatus: deleteStatus }
 	}
 
 	/**

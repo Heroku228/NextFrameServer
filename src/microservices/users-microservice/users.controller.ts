@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { MessagePattern, Payload } from '@nestjs/microservices'
 import { plainToInstance } from 'class-transformer'
 import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
@@ -11,6 +11,8 @@ import { UsersService } from './users.service'
 @Injectable()
 export class UsersController {
 	constructor(private readonly usersService: UsersService) { }
+
+	private logger = new Logger(UsersController.name)
 
 	@MessagePattern('get-user')
 	async getCurrentUser(@Payload() data: { username: string }) {
@@ -41,19 +43,12 @@ export class UsersController {
 
 	@MessagePattern('unban-user')
 	async unbanUser(@Payload() username: string) {
-		console.log('unban user username => ', username)
-		const unbanStatus = await this.usersService.unbanUser(username)
-
-		console.log('unban status => ', unbanStatus)
-		if (!unbanStatus)
-			return USER_ERROR_MESSAGE.USER_NOT_FOUND_OR_ALREADY_UNBANNED
-
-		return unbanStatus
+		return await this.usersService.unbanUser(username)
 	}
 
 	@MessagePattern('delete-user')
 	async deleteUser(@Payload() username: string) {
-		console.log('delete user username => ', username)
+		this.logger.log('delete user username => ', username)
 		const deleteStatus = await this.usersService.deleteUser(username)
 			.catch(err => {
 				console.error('[ERROR] (delete-user) ', err)
@@ -77,7 +72,7 @@ export class UsersController {
 	@MessagePattern('reset-user-password')
 	async resetUserPassword(@Payload() data: { username: string, newPassword: string }) {
 		const { username, newPassword } = data
-		console.log('reset user password username => ', username, ' newPassword => ', newPassword)
+		this.logger.log('reset user password username => ', username, ' newPassword => ', newPassword)
 		const resetStatus = await this.usersService.resetUserPassword(username, newPassword)
 			.catch(err => {
 				console.error('[ERROR] (reset-user-password) ', err)

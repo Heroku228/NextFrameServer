@@ -1,8 +1,9 @@
-import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hash } from 'bcrypt'
 import { plainToInstance } from 'class-transformer'
+import { deleteUserDirectory } from 'common/utils/FS'
 import { writeUserIcon } from 'common/utils/WriteUserIcon'
 import { AUTH_ERROR_MESSAGE, ROLE_ERROR_MESSAGE, ROLE_SUCCESS_MESSAGE, USER_ERROR_MESSAGE, USER_SUCCESS_MESSAGE } from 'constants/ErrorMessages'
 import { ROLES, TRoles } from 'constants/Roles'
@@ -24,6 +25,8 @@ export class UsersService {
 		@Inject('PRODUCTS_SERVICE')
 		private readonly productsClient: ClientProxy,
 	) { }
+
+	private logger = new Logger(UsersService.name)
 
 	async findUserProducts(userId: string) {
 		const products = await lastValueFrom(
@@ -251,8 +254,11 @@ export class UsersService {
 				username
 			}
 		})
-		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
-		if (!user.isBanned) throw new BadRequestException(USER_ERROR_MESSAGE.USER_NOT_BANNED)
+
+		if (!user)
+			throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+		if (!user.isBanned)
+			return new BadRequestException(USER_ERROR_MESSAGE.USER_NOT_BANNED)
 
 		user.isBanned = false
 		user.banReason = ''
@@ -264,13 +270,17 @@ export class UsersService {
 
 	async deleteUser(username: string) {
 		await this.userRepository.delete({ username })
+
+		await deleteUserDirectory(username)
+
 		return { message: USER_SUCCESS_MESSAGE.USER_DELETED }
 	}
 
 	async updateUserRole(username: string, newRole: string) {
 		const user = await this.userRepository.findOne({ where: { username } })
 
-		if (!user) throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
+		if (!user)
+			throw new NotFoundException(USER_ERROR_MESSAGE.USER_NOT_FOUND)
 
 		if (!user.roles.includes(newRole)) {
 			user.roles.push(newRole)

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
 import { Product } from 'microservices/products-microservice/entities/product.entity'
 import { CreateUserDto } from 'microservices/users-microservice/entities/dto/create-user.dto'
@@ -30,7 +30,7 @@ export class AppUsersService {
 		console.log('ban user userdata => ', userData)
 		return this.userClient.send('ban-user', userData)
 	}
-	unbanUser(username: string): Observable<boolean> {
+	unbanUser(username: string): Observable<BadRequestException | { unbanStatus: "Пользователь успешно разблокирован" }> {
 		return this.userClient.send('unban-user', username)
 	}
 
@@ -72,7 +72,7 @@ export class AppUsersService {
 	}
 
 	deleteUser(username: string): Observable<string | null> {
-		return this.userClient.send('delete-user', { username })
+		return this.userClient.send('delete-user',  username )
 	}
 
 	deleteUserAccountByID(userId: string): Observable<string | null> {
