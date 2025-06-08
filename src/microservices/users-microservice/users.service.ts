@@ -101,7 +101,9 @@ export class UsersService {
 	}
 
 	async changeUserRole(username: string, role: string) {
+		this.logger.log({ username, role })
 		const isValidRole = Object.values(ROLES).includes(role.toLowerCase() as TRoles)
+		
 		if (!isValidRole)
 			throw new BadRequestException(`
 				${ROLE_ERROR_MESSAGE.ROLE_NOT_FOUND}.

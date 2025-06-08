@@ -110,9 +110,10 @@ export class AdminController {
 	 * @param newRole - новая роль для пользователя.
 	 * @returns статус обновления роли пользователя.
 	 */
-	@Patch('update-user-role')
-	async updateUserRole(@Body() { username, newRole }: { username: string, newRole: string }) {
-		const updateStatus = await firstValueFrom(this.usersService.updateUserRole(username, newRole))
+	@Patch('change-user-role')
+	async changeUserRole(@Body() { username, role }: { username: string, role: string }) {
+		this.logger.log({ username, role })
+		const updateStatus = await firstValueFrom(this.usersService.changeUserRole(username, role))
 			.catch(err => {
 				throw new Error(`Ошибка при обновлении роли пользователя: ${err.message}`)
 			})

@@ -72,7 +72,7 @@ export class AppUsersService {
 	}
 
 	deleteUser(username: string): Observable<string | null> {
-		return this.userClient.send('delete-user',  username )
+		return this.userClient.send('delete-user', username)
 	}
 
 	deleteUserAccountByID(userId: string): Observable<string | null> {
@@ -85,10 +85,6 @@ export class AppUsersService {
 
 	updateUserData(userData: UpdateUserData): Observable<User | null> {
 		return this.userClient.send('update-user-data', userData)
-	}
-
-	updateUserRole(username: string, newRole: string): Observable<string[] | null> {
-		return this.userClient.send('update-user-role', { username, newRole })
 	}
 
 	updateUserStatus(username: string, status: string): Observable<string | null> {

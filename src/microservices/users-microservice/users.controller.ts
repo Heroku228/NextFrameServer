@@ -92,6 +92,7 @@ export class UsersController {
 
 	@MessagePattern('change-role')
 	async changeRole(@Payload() data: { username: string, role: string }) {
+		this.logger.log('payload data => ', data)
 		const { username, role } = data
 		return await this.usersService.changeUserRole(username, role)
 	}
