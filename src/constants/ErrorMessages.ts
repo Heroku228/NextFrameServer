@@ -12,6 +12,7 @@ export const USER_ERROR_MESSAGE = {
 	RENAME_DIRECTORY_ERROR: 'Ошибка при переименовании директории пользователя',
 	NO_UPDATE_DATA: 'Нет данных для обновления пользователя',
 	USER_ALREADY_BANNED: 'Пользователь уже заблокирован',
+	USER_ALREADY_AUTHORIZED: 'Пользователь уже авторизован',
 	USER_NOT_FOUND_OR_ALREADY_BANNED: 'Пользователь не найден - либо уже был заблокирован',
 	USER_NOT_FOUND_OR_ALREADY_UNBANNED: 'Пользователь не найден - либо не является заблокированным',
 	CANNOT_CHANGE_USER_ROLE: 'Не удалось изменеить роль пользователя',
@@ -59,6 +60,10 @@ export const AUTH_ERROR_MESSAGE = {
 	ACCOUNT_NOT_AUTHORIZED_OR_BANNED: 'Аккаунт не авторизован или заблокирован',
 	ACCOUNT_NOT_AUTHORIZED_OR_NOT_SELLER: 'Аккаунт не авторизован или не является продавцом',
 	ACCOUNT_NOT_AUTHORIZED_OR_ADMIN: 'Аккаунт не авторизован или не является администратором',
+} as const
+
+export const SELLER_ERROR_MESSAGE = {
+	NEED_SELLER_STATUS: 'Необходимо иметь статус продавца для доступа к этому ресурсу'
 } as const
 
 export const PRODUCT_ERROR_MESSAGE = {

@@ -1,4 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
+import { setProtectedCookie } from 'common/utils/set-cookie'
 import { tap } from 'rxjs'
 
 
@@ -12,14 +13,8 @@ export default class SetSellerCookieInterceptor implements NestInterceptor {
 
 		return next.handle().pipe(
 			tap(data => {
-				if (data.setSellerCookie) {
-					res.cookie('isSeller', true, {
-						httpOnly: false,
-						secure: true,
-						sameSite: 'strict',
-						maxAge: 24 * 60 * 60 * 1000
-					})
-				}
+				if (data.setSellerCookie)
+					setProtectedCookie(res, 'isSeller', true)
 			})
 		)
 	}

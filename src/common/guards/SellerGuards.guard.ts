@@ -1,4 +1,5 @@
 import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
+import { SELLER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { User } from 'microservices/users-microservice/entities/user.entity'
 
 /**
@@ -11,8 +12,8 @@ export class SellerGuard implements CanActivate {
 
 		if (!user) throw new UnauthorizedException()
 
-		if (!user.isSeller) {
-			throw new BadRequestException('Необходимо иметь статус продавца(seller), чтобы иметь доступ к этому ресурсу')
-		} else return true
+		if (!user.isSeller)
+			throw new BadRequestException(SELLER_ERROR_MESSAGE.NEED_SELLER_STATUS)
+		else return true
 	}
 }

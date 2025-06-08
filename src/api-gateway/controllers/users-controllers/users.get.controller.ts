@@ -5,6 +5,7 @@ import { CurrentUser } from 'common/decorators/current-user.decorator'
 import { UserDirectory } from 'common/decorators/user-directory.decorator'
 import { CookieUserGuard } from 'common/guards/cookie-user.guard'
 import { pathToDefaultIconOnFS } from 'constants/common'
+import { ROLES } from 'constants/Roles'
 import { Response } from 'express'
 import { readdir } from 'fs/promises'
 import { ResponseProductDto } from 'microservices/products-microservice/dto/response-product.dto'
@@ -26,7 +27,6 @@ export class AppUsersController {
 
 	@Get('me')
 	async getCurrentUser(@CurrentUser() user: ICurrentUser) {
-		console.log('User => ', user)
 		if (!user) throw new UnauthorizedException()
 		const userResponse = await firstValueFrom(this.usersService.findByUsername(user.username))
 			.catch(() => new NotFoundException())
@@ -34,6 +34,11 @@ export class AppUsersController {
 		if (!userResponse) throw new UnauthorizedException()
 
 		return plainToInstance(UserResponseDto, userResponse)
+	}
+
+	@Get('check-by-admin-role')
+	async checkByAdminRole(@CurrentUser() user: ICurrentUser) {
+		return { isAdmin: user.roles.some(role => role === ROLES.admin) }
 	}
 
 	@Get('user-products')
@@ -84,12 +89,8 @@ export class AppUsersController {
 				return
 			}
 
-			console.log('user-icon/:username')
 			const pathToAvatarsDir = join(cwd(), 'uploads', username, 'avatars')
-			console.log(pathToAvatarsDir)
 			const userAvatar = (await readdir(pathToAvatarsDir))[0]
-			console.log(userAvatar)
-
 			const pathToUserAvatar = join(pathToAvatarsDir, userAvatar)
 			return res.sendFile(pathToUserAvatar)
 		} catch (err) {

@@ -16,13 +16,11 @@ export class UsersController {
 
 	@MessagePattern('get-user')
 	async getCurrentUser(@Payload() data: { username: string }) {
-		console.log('getCurrentUser payload data -> ', data)
 		return await this.usersService.findByUsername(data.username)
 	}
 
 	@MessagePattern('delete-all-users')
 	async deleteAllUsers() {
-		console.log('delete all users')
 		await this.usersService.clear()
 		return { message: 'All users deleted successfully' }
 	}
@@ -30,10 +28,8 @@ export class UsersController {
 	@MessagePattern('ban-user')
 	async banUser(@Payload() userData: TBanUserData) {
 		try {
-			console.log('ban user try')
 			return await this.usersService.banUser(userData)
 		} catch (err) {
-			console.log('ban user catch')
 			if (err instanceof NotFoundException) {
 				const error: any = err
 				return error.response || USER_ERROR_MESSAGE.USER_NOT_FOUND
@@ -60,12 +56,8 @@ export class UsersController {
 	@MessagePattern('update-user-role')
 	async updateUserRole(@Payload() data: { username: string, newRole: string }) {
 		const { username, newRole } = data
-		const updateStatus = await this.usersService.updateUserRole(username, newRole)
-			.catch(err => {
-				console.error('[ERROR] (update-user-role) ', err)
-				throw new BadRequestException(USER_ERROR_MESSAGE.CANNOT_CHANGE_USER_ROLE)
-			})
-		return { updateStatus }
+		return await this.usersService.updateUserRole(username, newRole)
+			.catch(() => { throw new BadRequestException(USER_ERROR_MESSAGE.CANNOT_CHANGE_USER_ROLE) })
 	}
 
 	// TODO => Сделать проверку на существование пользователя и на то, что пароль не был сброшен ранее, а так же на то, что новый пароль не совпадает со старым + необходимо подтвредить сброс пароля через email
@@ -110,8 +102,6 @@ export class UsersController {
 
 	@MessagePattern('find-by-username')
 	async findByUsername(@Payload() username: string) {
-		console.log('find by username data => ', username)
-
 		try {
 			return await this.usersService.findByUsername(username)
 		} catch (err) {

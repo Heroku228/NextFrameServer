@@ -1,9 +1,14 @@
-import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Req, UseInterceptors } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, UseGuards, UseInterceptors } from '@nestjs/common'
 import { AppUsersService } from 'api-gateway/services/app-users.service'
+import { CurrentUser } from 'common/decorators/current-user.decorator'
+import { Roles } from 'common/decorators/Roles.decorator'
+import { JwtAuthGuard } from 'common/guards/JwtAuthGuard.guard'
+import { RolesGuard } from 'common/guards/RolesGuard.guard'
 import { ClearCookiesInterceptor } from 'common/interceptors/ClearCookies.interceptor'
 import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
+import { ROLES } from 'constants/Roles'
 import { firstValueFrom } from 'rxjs'
-import { IRequest } from 'types/request.type'
+import { ICurrentUser } from 'types/current-user.type'
 import { TBanUserData } from 'types/user-data.type'
 
 
@@ -13,22 +18,12 @@ import { TBanUserData } from 'types/user-data.type'
  */
 
 @Controller('admin')
-// @Roles('admin')
-// @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AdminController {
 	constructor(private readonly usersService: AppUsersService) { }
 
 	private logger = new Logger(AdminController.name)
-
-	@Get('test')
-	async test(
-		@Req() req: IRequest
-	) {
-		for (const cookie of req.cookies.entries()) {
-			console.log(cookie)
-		}
-		return { message: 'Admin controller is working!' }
-	}
 
 	// TEMPARILY METHOD
 	@Delete('delete-all-users')

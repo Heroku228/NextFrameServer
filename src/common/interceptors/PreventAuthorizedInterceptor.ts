@@ -1,4 +1,5 @@
 import { BadRequestException, CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
+import { USER_ERROR_MESSAGE } from 'constants/ErrorMessages'
 import { tap } from 'rxjs'
 import { IRequest } from 'types/request.type'
 
@@ -14,7 +15,7 @@ export class PreventAuthorizedInterceptor implements NestInterceptor {
 		return next.handle().pipe(
 			tap(() => {
 				if (request.cookies['jwt'])
-					throw new BadRequestException('Пользователь уже авторизован')
+					throw new BadRequestException(USER_ERROR_MESSAGE.USER_ALREADY_AUTHORIZED)
 			})
 		)
 	}
